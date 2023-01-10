@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package dev.danielkeyes.nacho
 
 import android.media.MediaPlayer
@@ -5,26 +7,46 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.danielkeyes.nacho.ui.theme.NachoTheme
-import java.lang.reflect.Field
-
+import dev.danielkeyes.nacho.utils.LOG_TAG
+import dev.danielkeyes.nacho.utils.NachoMediaPlayer
+import dev.danielkeyes.nacho.utils.SoundByteUtils
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
 
-    private var mediaPlayer = MediaPlayer()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             NachoTheme {
                 // A surface container using the 'background' color from the theme
@@ -32,65 +54,95 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Content(mediaPlayer) {
-                        mediaPlayer.stopPlaying()
-                        mediaPlayer = it
-                    }
+                    Content(
+                        nachoSounds = SoundByteUtils.getSoundBytes("nacho_libre"),
+                        playMedia = {
+                            NachoMediaPlayer.playSoundID(it, this)
+                        },
+                        stopMedia = {
+                            NachoMediaPlayer.stopPlaying()
+                        }
+                    )
                 }
             }
         }
     }
 
     override fun onPause() {
-        mediaPlayer.stopPlaying()
+        NachoMediaPlayer.stopPlaying()
         super.onPause()
     }
 
-    private fun MediaPlayer.stopPlaying(){
-        if(this.isPlaying) this.stop()
-    }
 }
 
 @Composable
-fun Content(mediaPlayer: MediaPlayer, updateMediaPlayer: (MediaPlayer) -> Unit) {
-    val context = LocalContext.current
+fun Content(nachoSounds: List<SoundByte>, playMedia: (Int) -> Unit, stopMedia: () -> Unit) {
+    Image(
+        painter = painterResource(id = R.drawable.nachoflyingsolo),
+        contentDescription = "",
+        contentScale = ContentScale.Crop
+    )
 
-    // images and webkit ...... <--list contents
-//    val allAssets = context.assets.list("")
-//    allAssets.logAll("allAssets")
+    LazyVerticalStaggeredGrid(
+        columns = StaggeredGridCells.Fixed(2)
+    ) {
+        items(nachoSounds) { soundByte ->
 
-    context.assets.list("raw").logAll("raw")
-
-    var mediaPlayer = MediaPlayer()
-//    val a = context.assets.openFd("/raw/nacho_libre_about_the_gospel.mp3")
-
-    val nachoLibreSounds = listRaw().filter { it.name.contains("nacho") }
-//    Image(
-//        painter = painterResource(id = R.drawable.nachoflyingsolo),
-//        contentDescription = "",
-//        contentScale = ContentScale.Fit
-//    )
-
-    Column() {
-        nachoLibreSounds.forEach{
-            Button(onClick = {
-                if(mediaPlayer.isPlaying) mediaPlayer.stop()
-                updateMediaPlayer(MediaPlayer.create(context, it.getInt(it)))
-                mediaPlayer.setOnPreparedListener {
-                    mediaPlayer.start()
-                }
-            }) {
-                Text(text = "${it.name.convertFromRawNachoSoundName()}")
-            }
+            var favorite: Boolean by rememberSaveable { mutableStateOf(Random.nextBoolean()) }
+            SoundByteButton(soundByte = soundByte,
+                isFavorite = favorite,
+                favorite = { it -> favorite = it },
+                playMedia = { playMedia(soundByte.id)}
+            )
         }
     }
 }
 
-fun logNullCheck(any: Any?, name: String) {
-    if(any == null) {
-        Log.e("nacho","$name is null")
-    } else {
-        Log.e("nacho","$name is not null")
+@Composable
+fun SoundByteButton(soundByte: SoundByte, isFavorite: Boolean, favorite: (Boolean) -> Unit, playMedia: (Int) -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .alpha(.8f),
+            onClick = {
+                playMedia(soundByte.id)
+            }) {
+            Text(
+                modifier = Modifier.padding(top = 8.dp, end = 8.dp),
+                text = soundByte.name.capitalize(),
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Icon(
+            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+            "favorite",
+            modifier = Modifier
+                .align(alignment = Alignment.TopEnd)
+                .clickable { favorite(!isFavorite) }
+                .padding(8.dp),
+            tint = Color(0xFFFFD700)
+        )
+    }
+}
+@Preview(showBackground = true)
+@Composable
+fun SoundBytePreview() {
+    NachoTheme {
+        Column {
+            SoundByteButton(
+                soundByte = SoundByte("anaconda squeeze", 1),
+                isFavorite = true,
+                favorite = {},
+                playMedia = {})
+            SoundByteButton(
+                soundByte = SoundByte("get that corn", 1),
+                isFavorite = false,
+                favorite = {},
+                playMedia = {})
+        }
     }
 }
 
@@ -98,31 +150,12 @@ fun logNullCheck(any: Any?, name: String) {
 @Composable
 fun DefaultPreview() {
     NachoTheme {
-        Content(MediaPlayer()){}
+        Content(SoundByteUtils.getSoundBytes("nacho_libre"), {}, {})
     }
 }
+data class SoundByte(val name: String, val id: Int)
 
-fun Array<String?>?.logAll(name: String) {
-    if (this == null || this.isNotEmpty()){
-        Log.e("nacho", "$name is null or empty")
-    } else {
-        Log.e("nacho","$name contains")
-        this.forEach {
-            Log.e("nacho","$it")
-        }
-    }
-}
-data class NachoSound(val name: String, val id: Int)
-fun listRaw(): Array<Field> {
-    val fields: Array<Field> =
-        R.raw::class.java.fields
-    fields.forEach {field ->
-        Log.d(
-            "nacho", "name=${field.name} id=${field.getInt(field)}",
-        ) }
-    return fields
+fun String.sanitizeSoundByteName(prefixIdentifier: String): String {
+    return this.removePrefix(prefixIdentifier).replace('_', ' ').trimStart()
 }
 
-fun String.convertFromRawNachoSoundName(): String{
-    return this.removePrefix("nacho_libre").replace('_', ' ')
-}
