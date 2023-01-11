@@ -3,16 +3,19 @@ package dev.danielkeyes.nacho.widget
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.content.Intent
 import android.widget.RemoteViews
 import dev.danielkeyes.nacho.R
 
 class NachoSoundByteWidget : AppWidgetProvider() {
 
     override fun onReceive(context: Context?, intent: Intent) {
-        if (intent.hasExtra(MY_PREGNANCY_WIDGET_IDS_KEY)) {
-            val ids = intent.extras?.getIntArray(MY_PREGNANCY_WIDGET_IDS_KEY)
-            onUpdate((context)!!, AppWidgetManager.getInstance(context), (ids)!!)
-        } else super.onReceive(context, intent)
+
+//        if (intent.hasExtra(MY_PREGNANCY_WIDGET_IDS_KEY)) {
+//            val ids = intent.extras?.getIntArray(MY_PREGNANCY_WIDGET_IDS_KEY)
+//            onUpdate((context)!!, AppWidgetManager.getInstance(context), (ids)!!)
+//        } else super.onReceive(context, intent)
+        super.onReceive(context, intent)
     }
 
     override fun onUpdate(
