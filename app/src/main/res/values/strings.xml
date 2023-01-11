@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">nacho</string>
     <string name="loading">loading</string>
+    <string name="play">play</string>
+    <string name="settings">settings</string>
 </resources>

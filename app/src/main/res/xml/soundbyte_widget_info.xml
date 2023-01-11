@@ -4,9 +4,9 @@
     android:minWidth="50dp"
     android:minHeight="50dp"
     android:initialLayout="@xml/soundbyte_widget_loading"
-    android:previewLayout="@xml/soundbyte_preview"
+    android:previewLayout="@layout/nacho_soundbyte_widget"
     android:resizeMode="horizontal|vertical"
-    android:targetCellWidth="1"
+    android:targetCellWidth="2"
     android:targetCellHeight="1"
     android:widgetCategory="home_screen"
     />

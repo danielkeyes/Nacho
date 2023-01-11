@@ -3,35 +3,28 @@ package dev.danielkeyes.nacho.utils
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import dev.danielkeyes.nacho.composables.Background
 
 private const val mSharedPrefFile = "dev.danielkeyes.nacho"
-private const val SOME_KEY = "SomeKey"
-private const val SOME_KEY2 = "SomeKey2"
+private const val BACKGROUND_KEY_SUFFIX = "background"
+private const val SOUNDBYTE_KEY_SUFFIX = "soundbyte"
 
 class SharedPreferencesHelper {
-    fun setSomeKey(dateInMilliSeconds: Long, context: Context) {
+    // widgetid_backgroundname
+    // widgetid_soundname
+    //TODO something like this for set/get background and soundByte
+
+    fun setBackground(widgetID: Int, background: String, context: Context) {
         val prefs: SharedPreferences = context.getSharedPreferences(mSharedPrefFile, MODE_PRIVATE)
-
-        prefs.edit().putLong(SOME_KEY, dateInMilliSeconds).apply()
-
+        prefs.edit().putString(genKey(widgetID, BACKGROUND_KEY_SUFFIX), background).apply()
     }
 
-    fun getSomeKey(context: Context): Long {
+    fun getBackground(widgetID: Int, context: Context, defaultValue: String): String {
         val prefs: SharedPreferences = context.getSharedPreferences(mSharedPrefFile, MODE_PRIVATE)
-
-        return prefs.getLong(SOME_KEY, System.currentTimeMillis())
+        return prefs.getString(genKey(widgetID, BACKGROUND_KEY_SUFFIX), defaultValue)?: defaultValue
     }
 
-    fun setSomeKey2(babyName: String, context: Context) {
-        val prefs: SharedPreferences = context.getSharedPreferences(mSharedPrefFile, MODE_PRIVATE)
-
-        prefs.edit().putString(SOME_KEY2, babyName).apply()
+    private fun genKey(widgetID: Int, keySuffix: String): String {
+       return "${widgetID}_${keySuffix}"
     }
-
-    fun getSomeKey2(context: Context): String? {
-        val prefs: SharedPreferences = context.getSharedPreferences(mSharedPrefFile, MODE_PRIVATE)
-
-        return prefs.getString(SOME_KEY2, null)
-    }
-
 }
