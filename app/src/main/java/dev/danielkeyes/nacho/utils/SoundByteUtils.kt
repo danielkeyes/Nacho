@@ -2,7 +2,7 @@ package dev.danielkeyes.nacho.utils
 
 import android.util.Log
 import dev.danielkeyes.nacho.R
-import dev.danielkeyes.nacho.SoundByte
+import dev.danielkeyes.nacho.resources.SoundByte
 import dev.danielkeyes.nacho.sanitizeSoundByteName
 import java.lang.reflect.Field
 

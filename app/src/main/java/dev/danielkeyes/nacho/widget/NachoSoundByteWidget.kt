@@ -28,7 +28,8 @@ class NachoSoundByteWidget : AppWidgetProvider() {
             val nachoSoundByteWidget = ComponentName(context, NachoSoundByteWidget::class.java)
 
             // TODO play correct sound
-            NachoMediaPlayer.playSoundID(SoundByteUtils.getSoundByte("wanna").id, context)
+            //change out this method
+            NachoMediaPlayer.playSoundID(SoundByteUtils.getSoundByte("wanna").resourceId, context)
 
             Toast.makeText(context, "hello", Toast.LENGTH_LONG).show()
             // UPDATE WIDGET - possibly uneccessary in my case
