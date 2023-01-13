@@ -8,12 +8,20 @@
     <fragment
         android:id="@+id/soundBoardFragment"
         android:name="dev.danielkeyes.nacho.SoundBoardFragment"
-        android:label="fragment_sound_board" />
+        android:label="fragment_sound_board" >
+        <action
+            android:id="@+id/action_soundBoardFragment_to_updateWidgetFragment"
+            app:destination="@id/updateWidgetFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/updateWidgetFragment"
         android:name="dev.danielkeyes.nacho.UpdateWidgetFragment"
         android:label="fragment_update_widget" >
+        <argument
+            android:name="widgetId"
+            android:defaultValue="-1"
+            app:argType="integer" />
     </fragment>
 
 <!--    <fragment-->

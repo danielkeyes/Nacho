@@ -1,5 +1,7 @@
 package dev.danielkeyes.nacho
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,17 +14,23 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-//import androidx.compose.runtime.setValue //TODO add back later when setting
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -37,6 +45,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
@@ -45,8 +56,13 @@ import dev.danielkeyes.nacho.resources.SoundByte
 import dev.danielkeyes.nacho.resources.WidgetBackground
 import dev.danielkeyes.nacho.resources.nachoBackgrounds
 import dev.danielkeyes.nacho.resources.nachoSoundBytes
+import dev.danielkeyes.nacho.ui.theme.ElementBackgrounds
+import kotlinx.coroutines.launch
 
 class UpdateWidgetFragment : Fragment() {
+
+    private val widgetViewModel: WidgetViewModel by activityViewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -55,11 +71,37 @@ class UpdateWidgetFragment : Fragment() {
 
         return ComposeView(requireContext()).apply {
             setContent {
+
                 NachoTheme() {
-                    UpdateWidgetContent()
+                    val widgets by widgetViewModel.widgets.observeAsState()
+                    val isLoading by widgetViewModel.isLoading.observeAsState(true)
+
+                    UpdateWidgetContent(
+                        widgets = widgets,
+                        isLoading = isLoading,
+                        refreshWidgets = { widgetViewModel.refreshWidgets() },
+                        updateWidgetBackground = {widgetID: Int, background: WidgetBackground ->
+                            widgetViewModel.updateWidgetBackground(widgetID, background)
+                        },
+                        updateWidgetSoundByte = {widgetID: Int, soundByte: SoundByte ->
+                            widgetViewModel.updateWidgetSoundByte(widgetID, soundByte)
+                        },
+                        updateWidgets = { widgetId: Int, background: WidgetBackground, soundByte: SoundByte ->
+                            widgetViewModel.updateWidget(widgetId, background, soundByte ) },
+                        getWidgets = { widgetViewModel.getWidgets() } )
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        widgetViewModel.refreshWidgets()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        widgetViewModel.updateWidgets()
     }
 }
 
@@ -67,53 +109,88 @@ const val USE_COMPOSE_WIDGET_PREVIEW = true
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun UpdateWidgetContent() {
+fun UpdateWidgetContent(
+    widgets: List<NachoWidget>?,
+    isLoading: Boolean,
+    updateWidgetBackground: (Int, WidgetBackground) -> Unit,
+    updateWidgetSoundByte: (Int, SoundByte) -> Unit,
+    refreshWidgets: () -> Unit,
+    updateWidgets: (Int, WidgetBackground, SoundByte) -> Unit,
+    getWidgets: () -> List<NachoWidget>?,
 
-    // Need a ViewModel here
-    val backgroundName by rememberSaveable { mutableStateOf(nachoBackgrounds.first().name) }
-    val soundByteName by rememberSaveable { mutableStateOf(nachoSoundBytes.first().name) }
+) {
+    if (isLoading) {
+        Text(
+            text = "Loading",
+            color = Color.White
+        ) // why is my surface and text black
+    } else {
+        // If no widgets, display message telling user to add widgets
+        if (widgets == null || widgets.isEmpty()) {
+            Text(
+                text = "You must add a widget first!",
+                color = Color.White
+            ) // why is my surface and text black
+        } else {
+            val backgroundName by rememberSaveable { mutableStateOf(nachoBackgrounds.first().name) }
+            val soundByteName by rememberSaveable { mutableStateOf(nachoSoundBytes.first().name) }
+            var currentWidgetId by rememberSaveable { mutableStateOf(widgets.first().widgetId) }
 
-    val pagerState = rememberPagerState()
-    val pages = listOf("Background", "SoundByte")
+            val pagerState = rememberPagerState()
+            val pages = listOf("Background", "SoundByte")
 
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = "Widget Preview")
-        WidgetPreview(
-            nachoBackgrounds.first { it.name == backgroundName },
-            nachoSoundBytes.first { it.name == soundByteName },
-            modifier = Modifier.padding(16.dp)
-        )
-        Column(Modifier.weight(1f)) {
-            TabRow(
-                // Our selected tab is our current page
-                selectedTabIndex = pagerState.currentPage,
-                // Override the indicator, using the provided pagerTabIndicatorOffset modifier
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        Modifier.pagerTabIndicatorOffset(pagerState, tabPositions)
-                    )
-                }
+            val coroutineScope = rememberCoroutineScope()
+
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Add tabs for all of our pages
+                Text(
+                    modifier = Modifier.background(color = Color.Cyan),
+                    text = "${widgets.first().widgetId} ${widgets.first().background.name} " +
+                            "${widgets.first().soundByte.name}"
+                )
+                Text(text = "Widget Preview")
+                LazyColumnWithSelection(widgets, { widgetId -> currentWidgetId = widgetId })
+                Column(Modifier.weight(1f)) {
+                    TabRow(
+                        // Our selected tab is our current page
+                        selectedTabIndex = pagerState.currentPage,
+                        // Override the indicator, using the provided pagerTabIndicatorOffset modifier
+                        indicator = { tabPositions ->
+                            TabRowDefaults.Indicator(
+                                Modifier.pagerTabIndicatorOffset(pagerState, tabPositions)
+                            )
+                        },
+                    ) {
+                        pages.forEachIndexed { index, title ->
+                            Tab(
+                                text = { Text(title) },
+                                selected = pagerState.currentPage == index,
+                                onClick = {
+                                    coroutineScope.launch {
+                                        pagerState.scrollToPage(index)
+                                    }
+                                },
+                            )
+                        }
+                    }
 
-                pages.forEachIndexed { index, title ->
-                    Tab(
-                        text = { Text(title) },
-                        selected = pagerState.currentPage == index,
-                        onClick = { /* TODO */ },
-                    )
-                }
-            }
-
-            HorizontalPager(
-                count = pages.size,
-                state = pagerState,
-            ) { page ->
-                Column() {
-                    if (pages[page] == "Background") {
-                        BackgroundPicker()
-                    } else {
-                        SoundBytePicker()
+                    HorizontalPager(
+                        count = pages.size,
+                        state = pagerState,
+                    ) { page ->
+                        Column() {
+                            if (pages[page] == "Background") {
+                                BackgroundPicker { background: WidgetBackground ->
+                                    updateWidgetBackground(currentWidgetId, background)
+                                }
+                            } else {
+                                SoundBytePicker { soundByte: SoundByte ->
+                                    updateWidgetSoundByte(currentWidgetId, soundByte)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -121,34 +198,64 @@ fun UpdateWidgetContent() {
     }
 }
 
-
-//    HorizontalPager(count = 2)
-//    Column(modifier = Modifier.fillMaxWidth()) {
-//        Text(text = "WidgetPreview")
-//        WidgetPreview(
-//            nachoBackgrounds.first { it.name == backgroundName },
-//            nachoSoundBytes.first{it.name == soundByteName})
-//        Column(Modifier.weight(1f)) {
-//            Text(text = "Select a background")
-//            BackgroundPicker()
-//            Text(text = "Select a sound")
-//            SoundBytePicker()
+@Composable
+fun LazyColumnWithSelection(
+    widgets: List<NachoWidget>,
+    widgetSelected: (Int) -> Unit,
+) {
+    var selectedIndex by remember { mutableStateOf(0) }
+    val onItemClick = {
+            index: Int -> selectedIndex = index
+            widgetSelected(widgets[index].widgetId)
+    }
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+    ) {
+//        widgets.forEach {
+//            item {
+//                WidgetPreview(it, modifier = Modifier
+//                    .clickable { onItemClick }
+//                    .padding(8.dp))
+//            }
 //        }
-//    }
+        items(widgets) { widget ->
+            WidgetPreview(widget,
+                modifier = Modifier
+                    .clickable { onItemClick }
+                    .padding(8.dp)
+            )
+        }
+    }
+}
 
+@Preview
+@Composable
+fun PreviewLazyColumnWithSelection() {
+    NachoTheme() {
+        LazyColumnWithSelection(
+            widgets = listOf(
+                NachoWidget(1, background = nachoBackgrounds[1], soundByte = nachoSoundBytes[1]),
+                NachoWidget(2, background = nachoBackgrounds[2], soundByte = nachoSoundBytes[2]),
+                NachoWidget(3, background = nachoBackgrounds[3], soundByte = nachoSoundBytes[3]),
+            ),
+            {}
+        )
+    }
+}
 
 @Composable
-fun BackgroundPicker() {
+fun BackgroundPicker(updateBackground: (WidgetBackground) -> Unit) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         content = {
             items(items = nachoBackgrounds) { widgetBackground ->
                 Box(modifier = Modifier.padding(16.dp)) {
                     WidgetPreview(
-                        background = widgetBackground,
-                        soundByte = nachoSoundBytes.first(),
+                        NachoWidget(1, widgetBackground, nachoSoundBytes.first()),
                         modifier = Modifier.clickable {
-//                        updateBackground(backGround) TODO
+                            updateBackground(widgetBackground)
                         },
                         backgroundOnly = true
                     )
@@ -159,15 +266,17 @@ fun BackgroundPicker() {
 }
 
 @Composable
-fun SoundBytePicker() {
-    Column() {
+fun SoundBytePicker(updateSoundByte: (SoundByte) -> Unit) {
+    Column(
+        modifier = Modifier.verticalScroll(rememberScrollState())
+    ) {
         nachoSoundBytes.forEach { soundByte ->
             Button(
                 modifier = Modifier
                     .wrapContentWidth()
                     .alpha(.8f),
                 onClick = {
-                    // updateSound(soundByte)
+                    updateSoundByte(soundByte)
                 }
             ) {
                 Text(
@@ -183,8 +292,7 @@ fun SoundBytePicker() {
 
 @Composable
 fun WidgetPreview(
-    background: WidgetBackground,
-    soundByte: SoundByte,
+    widget: NachoWidget,
     modifier: Modifier = Modifier,
     backgroundOnly: Boolean = false,
     useCompose: Boolean = USE_COMPOSE_WIDGET_PREVIEW
@@ -192,14 +300,12 @@ fun WidgetPreview(
     Box(modifier = modifier) {
         if (useCompose) {
             WidgetPreviewCompose(
-                background = background,
-                soundByte = soundByte,
+                widget = widget,
                 backgroundOnly = backgroundOnly
             )
         } else {
             WidgetPreviewAndroidView(
-                background = background,
-                soundByte = soundByte,
+                widget = widget,
                 backgroundOnly = backgroundOnly
             )
         }
@@ -208,8 +314,7 @@ fun WidgetPreview(
 
 @Composable
 fun WidgetPreviewAndroidView(
-    background: WidgetBackground,
-    soundByte: SoundByte,
+    widget: NachoWidget,
     modifier: Modifier = Modifier,
     backgroundOnly: Boolean = false
 ) {
@@ -221,8 +326,8 @@ fun WidgetPreviewAndroidView(
             val soundByteBackgroundIV = view.findViewById<ImageView>(R.id.widget_background_iv)
             val nameAndButtonLL = view.findViewById<LinearLayout>(R.id.name_and_buttons_ll)
 
-            soundByteNameTV.text = soundByte.name
-            soundByteBackgroundIV.setBackgroundResource(background.resourceId)
+            soundByteNameTV.text = widget.soundByte.name
+            soundByteBackgroundIV.setBackgroundResource(widget.background.resourceId)
             if (backgroundOnly) {
                 nameAndButtonLL.visibility = View.GONE
             }
@@ -233,9 +338,9 @@ fun WidgetPreviewAndroidView(
                 .width(144.dp)
                 .height(144.dp),
             update = { view ->
-                view.findViewById<TextView>(R.id.soundbyte_name_tv).text = soundByte.name
+                view.findViewById<TextView>(R.id.soundbyte_name_tv).text = widget.soundByte.name
                 view.findViewById<ImageView>(R.id.widget_background_iv)
-                    .setBackgroundResource(background.resourceId)
+                    .setBackgroundResource(widget.background.resourceId)
             }
         )
     }
@@ -243,13 +348,10 @@ fun WidgetPreviewAndroidView(
 
 @Composable
 fun WidgetPreviewCompose(
-    background: WidgetBackground,
-    soundByte: SoundByte,
+    widget: NachoWidget,
     modifier: Modifier = Modifier,
     backgroundOnly: Boolean = false
 ) {
-    val elementBackgrounds = Color(0x6603DAC5)
-
     Box(
         modifier = modifier
             .width(144.dp)
@@ -258,7 +360,7 @@ fun WidgetPreviewCompose(
     ) {
 
         Image(
-            painter = painterResource(id = background.resourceId),
+            painter = painterResource(id = widget.background.resourceId),
             contentDescription = "",
             modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
@@ -269,12 +371,12 @@ fun WidgetPreviewCompose(
                 modifier = Modifier.wrapContentHeight(),
             ) {
                 Text(
-                    text = soundByte.name,
+                    text = widget.soundByte.name,
                     modifier = Modifier
                         .padding(4.dp)
                         .fillMaxWidth()
                         .wrapContentHeight()
-                        .background(color = elementBackgrounds),
+                        .background(color = ElementBackgrounds),
                     fontSize = 24.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -294,7 +396,7 @@ fun WidgetPreviewCompose(
                             modifier = Modifier
                                 .padding(horizontal = 16.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(elementBackgrounds)
+                                .background(ElementBackgrounds)
                                 .padding(8.dp)
                         )
                     }
@@ -304,21 +406,28 @@ fun WidgetPreviewCompose(
     }
 }
 
-@Preview
-@Composable
-fun PreviewWidgetConfig() {
-    NachoTheme {
-        UpdateWidgetContent()
-    }
-}
+//@Preview
+//@Composable
+//fun PreviewWidgetConfig() {
+//    NachoTheme {
+//        UpdateWidgetContent(
+//            listOf(fakeWidget),
+//            false,
+//            {1, wid},
+//            {},
+//            {},
+//            {},
+//            {},
+//        )
+//    }
+//}
 
 @Preview
 @Composable
 fun PreviewWidgetPreviewInCompose() {
     NachoTheme() {
         WidgetPreviewCompose(
-            background = nachoBackgrounds.first(),
-            soundByte = nachoSoundBytes.first()
+            fakeWidget
         )
     }
 }
@@ -340,7 +449,7 @@ fun Widget2x2(
 @Composable
 fun PreviewWidgetPreview() {
     NachoTheme {
-        WidgetPreview(nachoBackgrounds.first(), SoundByte("I wanna win", 1))
+        WidgetPreview(fakeWidget)
     }
 }
 
@@ -348,7 +457,7 @@ fun PreviewWidgetPreview() {
 @Composable
 fun PreviewBackgroundPicker() {
     NachoTheme {
-        BackgroundPicker()
+        BackgroundPicker {}
     }
 }
 
@@ -356,6 +465,8 @@ fun PreviewBackgroundPicker() {
 @Composable
 fun PreviewSoundBytePicker() {
     NachoTheme {
-        SoundBytePicker()
+        SoundBytePicker {}
     }
 }
+
+private val fakeWidget: NachoWidget = NachoWidget(1, nachoBackgrounds.first(), nachoSoundBytes.first())

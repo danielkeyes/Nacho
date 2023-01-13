@@ -2,7 +2,11 @@ package dev.danielkeyes.nacho.resources
 
 import dev.danielkeyes.nacho.R
 
-data class WidgetBackground(val name: String, val resourceId: Int)
+data class WidgetBackground(val name: String, val resourceId: Int) {
+    override fun toString(): String {
+        return "WidgetBackground(name='$name', resourceId=$resourceId)"
+    }
+}
 
 val nachoBackgrounds: List<WidgetBackground> =
     listOf(
@@ -19,10 +23,10 @@ val nachoBackgrounds: List<WidgetBackground> =
 
 private val defaultBackground = nachoBackgrounds.first()
 
-fun List<WidgetBackground>.getBackground(resourceId: Int): WidgetBackground {
-    return this.find { it.resourceId == resourceId } ?: defaultBackground
+fun List<WidgetBackground>.getBackground(resourceId: Int): WidgetBackground? {
+    return this.find { it.resourceId == resourceId } //?: defaultBackground
 }
 
-fun List<WidgetBackground>.getBackground(name: String): WidgetBackground {
-    return this.find { it.name.contains(name) } ?: defaultBackground
+fun List<WidgetBackground>.getBackground(name: String): WidgetBackground? {
+    return this.find { it.name.contains(name) } //?: defaultBackground
 }

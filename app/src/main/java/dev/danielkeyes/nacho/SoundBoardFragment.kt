@@ -6,23 +6,21 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
@@ -33,10 +31,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
+import androidx.navigation.findNavController
 import dev.danielkeyes.nacho.resources.SoundByte
+import dev.danielkeyes.nacho.resources.nachoSoundBytes
+import dev.danielkeyes.nacho.ui.theme.ElementBackgrounds
 import dev.danielkeyes.nacho.ui.theme.NachoTheme
 import dev.danielkeyes.nacho.utils.NachoMediaPlayer
-import dev.danielkeyes.nacho.utils.SoundByteUtils
 import kotlin.random.Random
 
 class SoundBoardFragment : Fragment() {
@@ -50,6 +50,7 @@ class SoundBoardFragment : Fragment() {
             setContent {
                 val context = LocalContext.current
 
+                    
                 NachoTheme {
                     // A surface container using the 'background' color from the theme
                     Surface(
@@ -57,13 +58,15 @@ class SoundBoardFragment : Fragment() {
                         color = MaterialTheme.colors.background
                     ) {
                         Content(
-                            nachoSounds = SoundByteUtils.getSoundBytes("nacho_libre"),
+                            {findNavController().navigate(R.id
+                                .action_soundBoardFragment_to_updateWidgetFragment)},
+                            nachoSounds = nachoSoundBytes,
                             playMedia = {
                                 NachoMediaPlayer.playSoundID(it, context)
                             },
                             stopMedia = {
                                 NachoMediaPlayer.stopPlaying()
-                            }
+                            },
                         )
                     }
                 }
@@ -80,7 +83,12 @@ class SoundBoardFragment : Fragment() {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Content(nachoSounds: List<SoundByte>, playMedia: (Int) -> Unit, stopMedia: () -> Unit) {
+fun Content(
+    navigateUpdateWidget: () -> Unit,
+    nachoSounds: List<SoundByte>,
+    playMedia: (Int) -> Unit,
+    stopMedia: () -> Unit
+) {
     Image(
         painter = painterResource(id = R.drawable.nachoflyingsolo),
         contentDescription = "",
@@ -90,6 +98,13 @@ fun Content(nachoSounds: List<SoundByte>, playMedia: (Int) -> Unit, stopMedia: (
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(2)
     ) {
+        item { 
+            Button(onClick = {
+                navigateUpdateWidget()
+            }) {
+                Text(text = "Update Widget")
+            }
+        }
         items(nachoSounds) { soundByte ->
 
             var favorite: Boolean by rememberSaveable { mutableStateOf(Random.nextBoolean()) }
@@ -104,31 +119,38 @@ fun Content(nachoSounds: List<SoundByte>, playMedia: (Int) -> Unit, stopMedia: (
 
 @Composable
 fun SoundByteButton(soundByte: SoundByte, isFavorite: Boolean, favorite: (Boolean) -> Unit, playMedia: (Int) -> Unit) {
-    Box(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .padding(8.dp)) {
         Button(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(ElementBackgrounds)
+                .clip(RoundedCornerShape(10.dp))
                 .alpha(.8f),
             onClick = {
                 playMedia(soundByte.resourceId)
-            }) {
+            },
+            colors = ButtonDefaults.buttonColors(backgroundColor = ElementBackgrounds)
+            ) {
             Text(
-                modifier = Modifier.padding(top = 8.dp, end = 8.dp),
+                modifier = Modifier.padding(8.dp),
                 text = soundByte.name.capitalize(),
                 fontSize = 24.sp,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = Color.Black
             )
         }
 
-        Icon(
-            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
-            "favorite",
-            modifier = Modifier
-                .align(alignment = Alignment.TopEnd)
-                .clickable { favorite(!isFavorite) }
-                .padding(8.dp),
-            tint = Color(0xFFFFD700)
-        )
+//        Icon(
+//            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+//            "favorite",
+//            modifier = Modifier
+//                .align(alignment = Alignment.TopEnd)
+//                .clickable { favorite(!isFavorite) }
+//                .padding(8.dp),
+//            tint = Color(0xFFFFD700)
+//        )
     }
 }
 @Preview(showBackground = true)
@@ -154,7 +176,7 @@ fun SoundBytePreview() {
 @Composable
 fun DefaultPreview() {
     NachoTheme {
-        Content(SoundByteUtils.getSoundBytes("nacho_libre"), {}, {})
+        Content({}, nachoSoundBytes, {}, {})
     }
 }
 fun String.sanitizeSoundByteName(prefixIdentifier: String): String {

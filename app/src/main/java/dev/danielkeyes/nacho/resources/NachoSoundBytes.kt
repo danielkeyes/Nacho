@@ -2,7 +2,11 @@ package dev.danielkeyes.nacho.resources
 
 import dev.danielkeyes.nacho.R
 
-data class SoundByte(val name: String, val resourceId: Int)
+data class SoundByte(val name: String, val resourceId: Int) {
+    override fun toString(): String {
+        return "SoundByte(name='$name', resourceId=$resourceId)"
+    }
+}
 
 val nachoSoundBytes: List<SoundByte> =
     listOf(

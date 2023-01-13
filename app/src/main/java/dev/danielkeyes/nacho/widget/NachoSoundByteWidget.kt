@@ -7,17 +7,29 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import android.widget.RemoteViews
-import android.widget.Toast
 import dev.danielkeyes.nacho.R
+import dev.danielkeyes.nacho.resources.getSoundByte
+import dev.danielkeyes.nacho.resources.nachoBackgrounds
+import dev.danielkeyes.nacho.resources.nachoSoundBytes
 import dev.danielkeyes.nacho.utils.NachoMediaPlayer
-import dev.danielkeyes.nacho.utils.SoundByteUtils
+import dev.danielkeyes.nacho.utils.SharedPreferencesHelper
+
+
+private const val PLAY_CLICKED = "playButtonClick"
+private const val SETTINGS_CLICKED = "settingsButtonClick"
+private const val SOUNDBYTE_EXTRA = "soundByteExtra"
+
+private val flags =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+    } else {
+        PendingIntent.FLAG_UPDATE_CURRENT
+    }
 
 class NachoSoundByteWidget : AppWidgetProvider() {
-
-    private val PLAY_CLICKED = "playButtonClick"
-    private val SETTINGS_CLICKED = "settingsButtonClick"
 
     override fun onReceive(context: Context, intent: Intent) {
         Log.e("nacho", "intent.action: ${intent.action}")
@@ -27,15 +39,22 @@ class NachoSoundByteWidget : AppWidgetProvider() {
             val remoteViews = RemoteViews(context.packageName, R.layout.nacho_soundbyte_widget)
             val nachoSoundByteWidget = ComponentName(context, NachoSoundByteWidget::class.java)
 
-            // TODO play correct sound
-            //change out this method
-            NachoMediaPlayer.playSoundID(SoundByteUtils.getSoundByte("wanna").resourceId, context)
+            val soundByteId = intent.getIntExtra("soundByteExtra", nachoSoundBytes.first().resourceId)
+            NachoMediaPlayer.playSoundID(nachoSoundBytes.getSoundByte(soundByteId).resourceId, context)
 
-            Toast.makeText(context, "hello", Toast.LENGTH_LONG).show()
-            // UPDATE WIDGET - possibly uneccessary in my case
+            // TODO: Do I need to do both of these?
+            onUpdate(context, appWidgetManager, appWidgetManager.getAppWidgetIds(nachoSoundByteWidget))
             appWidgetManager.updateAppWidget(nachoSoundByteWidget, remoteViews)
-        } else if (SETTINGS_CLICKED == intent.action) {
+         } else if (SETTINGS_CLICKED == intent.action) {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val remoteViews = RemoteViews(context.packageName, R.layout.nacho_soundbyte_widget)
+            val nachoSoundByteWidget = ComponentName(context, NachoSoundByteWidget::class.java)
+
             // TODO: launch to updateWidget Page
+
+            // TODO: Do I need to do both of these?
+            onUpdate(context, appWidgetManager, appWidgetManager.getAppWidgetIds(nachoSoundByteWidget))
+            appWidgetManager.updateAppWidget(nachoSoundByteWidget, remoteViews)
         }
     }
 
@@ -46,11 +65,18 @@ class NachoSoundByteWidget : AppWidgetProvider() {
     ) {
         // TODO have it get the correct background and soundByte
         // There may be multiple widgets active, so update all of them
-        for (appWidgetId in appWidgetIds) {
-            val views = RemoteViews(context.packageName, R.layout.nacho_soundbyte_widget)
-            views.setTextViewText(R.id.soundbyte_name_tv, "Get that corn")
-            views.setOnClickPendingIntent(R.id.play_ib, getPendingSelfIntent(context, PLAY_CLICKED))
-            appWidgetManager.updateAppWidget(appWidgetId, views)
+        updateWidgets(appWidgetIds, context, appWidgetManager)
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context?,
+        appWidgetManager: AppWidgetManager?,
+        appWidgetId: Int,
+        newOptions: Bundle?
+    ) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        if( context != null && appWidgetManager != null) {
+            onUpdate(context, appWidgetManager, IntArray(appWidgetId))
         }
     }
 
@@ -61,48 +87,49 @@ class NachoSoundByteWidget : AppWidgetProvider() {
     override fun onDisabled(context: Context) {
         // Enter relevant functionality for when the last widget is disabled
     }
+}
 
-    private fun getPendingSelfIntent(context: Context?, action: String?): PendingIntent? {
-        val intent = Intent(context, javaClass)
-        intent.action = action
+fun updateWidgets(
+    appWidgetIds: IntArray,
+    context: Context,
+    appWidgetManager: AppWidgetManager
+) {
+    for (appWidgetId in appWidgetIds) {
+        val views = RemoteViews(context.packageName, R.layout.nacho_soundbyte_widget)
 
-        val flags =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-            } else {
-                PendingIntent.FLAG_UPDATE_CURRENT
-            }
+        val background = SharedPreferencesHelper.getBackground(appWidgetId, context, nachoBackgrounds.first())
+        val soundByte = SharedPreferencesHelper.getSoundByte(appWidgetId, context, nachoSoundBytes.first())
 
-        return PendingIntent.getBroadcast(context, 0, intent, flags)
+        // Set WidgetText
+        views.setTextViewText(R.id.soundbyte_name_tv, soundByte.name)
 
+        // Set Background
+        views.setImageViewResource(R.id.widget_background_iv, background.resourceId)
+
+        // Play onClick
+        val playIntent = Intent(context, NachoSoundByteWidget::class.java)
+        playIntent.action = PLAY_CLICKED
+        playIntent.putExtra(SOUNDBYTE_EXTRA, soundByte.resourceId)
+        val playPendingIntent = PendingIntent.getBroadcast(context,0,playIntent, flags)
+        views.setOnClickPendingIntent(R.id.play_ib, playPendingIntent)
+
+        // Settings onClick
+        val settingsIntent = Intent(context, NachoSoundByteWidget::class.java)
+        settingsIntent.action = SETTINGS_CLICKED
+        val settingsPendingIntent = PendingIntent.getBroadcast(context,0,settingsIntent, flags)
+        views.setOnClickPendingIntent(R.id.settings_ib, getPendingSelfIntent(
+            context,
+            SETTINGS_CLICKED
+        ))
+
+        appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 }
 
-// TODO does this need to be public so I can call it from the WidgetUpdate composable?
+private fun getPendingSelfIntent(context: Context?, action: String?, soundByteId: Int = -1): PendingIntent? {
+    val intent = Intent(context, NachoSoundByteWidget::class.java)
+    intent.action = action
+    intent.putExtra(SOUNDBYTE_EXTRA, soundByteId)
 
-//    fun updateAppWidget(
-//        context: Context,
-//        appWidgetManager: AppWidgetManager,
-//        appWidgetId: Int
-//    ) {
-//        // get sound ID using widgetId from shared preferences
-//        // get sound name reference
-//        // set sound name
-//        // set sound name on click
-//
-////    val lmp = SharedPreferencesHelper().getFirstDayLastMenstrualPeriod(context)
-////    val currentDate = System.currentTimeMillis()
-//
-////    val widgetText = context.getString(R.string.appwidget_text)
-//        // Construct the RemoteViews object
-//        val views = RemoteViews(context.packageName, R.layout.nacho_soundbyte_widget)
-//        views.setTextViewText(R.id.soundbyte_name_tv, "Get that corn")
-////        views.setOnClickPendingIntent(R.id.play_ib, getPendingSelfIntent(context, PLAY_CLICKED))
-//
-////    views.setTextViewText(R.id.appwidget_text, DataHelper().getDifferenceString(lmp, currentDate))
-////    views.setTextViewText(R.id.appwidget_text, "Something")
-//
-//        // Instruct the widget manager to update the widget
-//        appWidgetManager.updateAppWidget(appWidgetId, views)
-//    }
-//
+    return PendingIntent.getBroadcast(context, 0, intent, flags)
+}
