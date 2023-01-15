@@ -6,15 +6,17 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import dev.danielkeyes.nacho.resources.SoundByte
-import dev.danielkeyes.nacho.resources.WidgetBackground
-import dev.danielkeyes.nacho.resources.nachoBackgrounds
-import dev.danielkeyes.nacho.resources.nachoSoundBytes
+import androidx.lifecycle.Observer
+import androidx.lifecycle.viewModelScope
+import dev.danielkeyes.nacho.resources.*
 import dev.danielkeyes.nacho.utils.NachoMediaPlayer
 import dev.danielkeyes.nacho.utils.SharedPreferencesHelper
 import dev.danielkeyes.nacho.utils.nachoLog
 import dev.danielkeyes.nacho.widget.NachoSoundByteWidget
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class WidgetViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -24,46 +26,47 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
     private val _widgets: MutableLiveData<List<NachoWidget>> = MutableLiveData(listOf())
     val widgets: LiveData<List<NachoWidget>> = _widgets
 
-    private val _isLoading: MutableLiveData<Boolean> = MutableLiveData(false)
+    private val _isLoading: MutableLiveData<Boolean> = MutableLiveData(true)
     val isLoading: LiveData<Boolean> = _isLoading
 
     init {
-        nachoLog("WidgetViewModel: init")
         refreshWidgets()
     }
 
     private fun getWidgetIDs(): List<Int> {
-        nachoLog("WidgetViewModel: getWidgetIDs")
-        val widgetManager = AppWidgetManager.getInstance(context)
+        val widgetIds = AppWidgetManager.getInstance(context)
             .getAppWidgetIds(ComponentName(context, NachoSoundByteWidget::class.java))
-        nachoLog("Widget total: ${widgetManager.size}")
-        widgetManager.forEach { nachoLog(it.toString()) }
-        return widgetManager.toList()
+        nachoLog("Widget total: ${widgetIds.size}")
+        widgetIds.forEach {
+            nachoLog(it.toString())
+        }
+        return widgetIds.toList()
     }
 
     fun refreshWidgets() {
-        nachoLog("WidgetViewModel: refreshWidgets")
-        _isLoading.postValue(true)
+        _isLoading.value = true
 
         val widgetIds = getWidgetIDs()
 
-        val widgets = mutableListOf<NachoWidget>()
+        val widgetsList = mutableListOf<NachoWidget>()
         widgetIds.forEach { widgetId ->
             val background =
                 SharedPreferencesHelper.getBackground(widgetId, context, nachoBackgrounds.first())
             val soundByte =
                 SharedPreferencesHelper.getSoundByte(widgetId, context, nachoSoundBytes.first())
-            widgets.add(NachoWidget(widgetId, background, soundByte))
+            widgetsList.add(NachoWidget(widgetId, background, soundByte))
         }
-        _widgets.postValue(widgets.toList())
 
-        _isLoading.postValue(false)
+        _widgets.value = widgetsList.toList()
+
+        // This helps the loading true -> false to not be to quick
+        viewModelScope.launch {
+            delay(1000)
+            _isLoading.postValue(false)
+        }
     }
 
     fun updateWidgetBackground(widgetId: Int, background: WidgetBackground) {
-        nachoLog("WidgetViewModel: updateWidgetBackground")
-        nachoLog("widgetId: $widgetId backgroundName: ${background.name}")
-
         SharedPreferencesHelper.setBackground(widgetId, background, context)
 
         val list = mutableListOf<NachoWidget>()
@@ -83,9 +86,6 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun updateWidgetSoundByte(widgetId: Int, soundByte: SoundByte) {
-        nachoLog("WidgetViewModel: updateWidgetSoundByte")
-        nachoLog("widgetId: $widgetId soundByteName: ${soundByte.name}")
-
         SharedPreferencesHelper.setSoundByte(widgetId, soundByte, context)
 
         val list = mutableListOf<NachoWidget>()
@@ -116,15 +116,5 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
 
     fun playSoundByte(soundByte: SoundByte) {
         NachoMediaPlayer.playSoundID(soundByte.resourceId, context)
-    }
-}
-
-data class NachoWidget(
-    val widgetId: Int,
-    var background: WidgetBackground,
-    var soundByte: SoundByte
-) {
-    override fun toString(): String {
-        return "NachoWidget(widgetId=$widgetId, background=$background, soundByte=$soundByte)"
     }
 }

@@ -2,7 +2,11 @@ package dev.danielkeyes.nacho.utils
 
 import android.util.Log
 
-const val LOG_TAG = "nacho"
+const val LOG_TAG = "Nacho"
+
+fun nachoLog(msg: String){
+    Log.e(LOG_TAG, msg)
+}
 
 fun logNullCheck(any: Any?, name: String) {
     if(any == null) {
@@ -10,10 +14,6 @@ fun logNullCheck(any: Any?, name: String) {
     } else {
         nachoLog("$name is not null")
     }
-}
-
-fun nachoLog(msg: String){
-    Log.e(LOG_TAG, msg)
 }
 
 fun Array<String?>?.logAll(name: String) {

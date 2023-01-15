@@ -10,6 +10,8 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.RemoteViews
+import androidx.navigation.NavDeepLinkBuilder
+import dev.danielkeyes.nacho.MainActivity
 import dev.danielkeyes.nacho.R
 import dev.danielkeyes.nacho.resources.getSoundByte
 import dev.danielkeyes.nacho.resources.nachoBackgrounds
@@ -33,29 +35,24 @@ class NachoSoundByteWidget : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         Log.e("nacho", "intent.action: ${intent.action}")
-        super.onReceive(context, intent)
         if (PLAY_CLICKED == intent.action) {
+            // Get soundByte and play it
+            val soundByteId = intent.getIntExtra(SOUNDBYTE_EXTRA, nachoSoundBytes.first().resourceId)
+            val soundByte = nachoSoundBytes.getSoundByte(soundByteId)
+            NachoMediaPlayer.playSoundID(soundByte.resourceId, context)
+
+            // update widgets
             val appWidgetManager = AppWidgetManager.getInstance(context)
-            val remoteViews = RemoteViews(context.packageName, R.layout.nacho_soundbyte_widget)
-            val nachoSoundByteWidget = ComponentName(context, NachoSoundByteWidget::class.java)
-
-            val soundByteId = intent.getIntExtra("soundByteExtra", nachoSoundBytes.first().resourceId)
-            NachoMediaPlayer.playSoundID(nachoSoundBytes.getSoundByte(soundByteId).resourceId, context)
-
-            // TODO: Do I need to do both of these?
-            onUpdate(context, appWidgetManager, appWidgetManager.getAppWidgetIds(nachoSoundByteWidget))
-            appWidgetManager.updateAppWidget(nachoSoundByteWidget, remoteViews)
+            val widget = ComponentName(context, NachoSoundByteWidget::class.java)
+            onUpdate(context, appWidgetManager, appWidgetManager.getAppWidgetIds(widget))
          } else if (SETTINGS_CLICKED == intent.action) {
+
             val appWidgetManager = AppWidgetManager.getInstance(context)
-            val remoteViews = RemoteViews(context.packageName, R.layout.nacho_soundbyte_widget)
-            val nachoSoundByteWidget = ComponentName(context, NachoSoundByteWidget::class.java)
-
-            // TODO: launch to updateWidget Page
-
-            // TODO: Do I need to do both of these?
-            onUpdate(context, appWidgetManager, appWidgetManager.getAppWidgetIds(nachoSoundByteWidget))
-            appWidgetManager.updateAppWidget(nachoSoundByteWidget, remoteViews)
+            val widget = ComponentName(context, NachoSoundByteWidget::class.java)
+            onUpdate(context, appWidgetManager, appWidgetManager.getAppWidgetIds(widget))
         }
+
+        super.onReceive(context, intent)
     }
 
     override fun onUpdate(
@@ -63,8 +60,6 @@ class NachoSoundByteWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        // TODO have it get the correct background and soundByte
-        // There may be multiple widgets active, so update all of them
         updateWidgets(appWidgetIds, context, appWidgetManager)
     }
 
@@ -96,6 +91,7 @@ fun updateWidgets(
     for (appWidgetId in appWidgetIds) {
         val views = RemoteViews(context.packageName, R.layout.nacho_soundbyte_widget)
 
+        // retrieve widget Background and Soundbyte
         val background = SharedPreferencesHelper.getBackground(appWidgetId, context, nachoBackgrounds.first())
         val soundByte = SharedPreferencesHelper.getSoundByte(appWidgetId, context, nachoSoundBytes.first())
 
@@ -105,30 +101,22 @@ fun updateWidgets(
         // Set Background
         views.setImageViewResource(R.id.widget_background_iv, background.resourceId)
 
-        // Play onClick
+        // Set Play button launch pending intent PLAY_CLICKED
         val playIntent = Intent(context, NachoSoundByteWidget::class.java)
         playIntent.action = PLAY_CLICKED
         playIntent.putExtra(SOUNDBYTE_EXTRA, soundByte.resourceId)
         val playPendingIntent = PendingIntent.getBroadcast(context,0,playIntent, flags)
         views.setOnClickPendingIntent(R.id.play_ib, playPendingIntent)
 
-        // Settings onClick
-        val settingsIntent = Intent(context, NachoSoundByteWidget::class.java)
-        settingsIntent.action = SETTINGS_CLICKED
-        val settingsPendingIntent = PendingIntent.getBroadcast(context,0,settingsIntent, flags)
-        views.setOnClickPendingIntent(R.id.settings_ib, getPendingSelfIntent(
-            context,
-            SETTINGS_CLICKED
-        ))
+        // Set setting button to navigate to updateWidgetFragment
+        val pendingIntent = NavDeepLinkBuilder(context)
+            .setComponentName(MainActivity::class.java)
+            .setGraph(R.navigation.nav_graph)
+            .setDestination(R.id.updateWidgetFragment)
+            .createPendingIntent()
+
+        views.setOnClickPendingIntent(R.id.settings_ib, pendingIntent)
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
-}
-
-private fun getPendingSelfIntent(context: Context?, action: String?, soundByteId: Int = -1): PendingIntent? {
-    val intent = Intent(context, NachoSoundByteWidget::class.java)
-    intent.action = action
-    intent.putExtra(SOUNDBYTE_EXTRA, soundByteId)
-
-    return PendingIntent.getBroadcast(context, 0, intent, flags)
 }

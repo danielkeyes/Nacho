@@ -14,8 +14,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -48,13 +51,21 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
-import dev.danielkeyes.nacho.resources.SoundByte
-import dev.danielkeyes.nacho.resources.WidgetBackground
-import dev.danielkeyes.nacho.resources.nachoBackgrounds
-import dev.danielkeyes.nacho.resources.nachoSoundBytes
+import dev.danielkeyes.nacho.composables.MyScaffold
+import dev.danielkeyes.nacho.resources.*
+import dev.danielkeyes.nacho.ui.theme.NachoBlue
+import dev.danielkeyes.nacho.ui.theme.NachoRed
 import dev.danielkeyes.nacho.ui.theme.NachoTheme
 import dev.danielkeyes.nacho.utils.nachoLog
 import kotlinx.coroutines.launch
+
+
+const val USE_ANDROID_VIEW = true
+val WIDGET_HEIGHT = 115.dp
+val WIDGET_WIDTH = 144.dp
+val BACKGROUND_COLOR: Color = NachoBlue
+val HEADER_BACKGROUND_COLOR: Color = NachoRed
+val HEADER_TEXT_COLOR: Color = Color.White
 
 class UpdateWidgetFragment : Fragment() {
 
@@ -70,7 +81,7 @@ class UpdateWidgetFragment : Fragment() {
                 NachoTheme() {
                     Surface() {
                         val widgets by widgetViewModel.widgets.observeAsState()
-                        val isLoading: Boolean by widgetViewModel.isLoading.observeAsState(false)
+                        val isLoading: Boolean by widgetViewModel.isLoading.observeAsState(true)
 
                         UpdateWidgetContent(
                             widgets = widgets,
@@ -103,8 +114,6 @@ class UpdateWidgetFragment : Fragment() {
     }
 }
 
-const val USE_COMPOSE_WIDGET_PREVIEW = true
-
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun UpdateWidgetContent(
@@ -114,75 +123,91 @@ fun UpdateWidgetContent(
     updateWidgetSoundByte: (Int, SoundByte) -> Unit,
     playSoundByte: (SoundByte) -> Unit,
 ) {
-    if (isLoading) {
-        Text(
-            text = "Loading", color = Color.White
-        ) // why is my surface and text black
-    } else {
-        // If no widgets, display message telling user to add widgets
-        if (widgets == null || widgets.isEmpty()) {
-            Text(
-                text = "You must add a widget first!",
-            ) // why is my surface and text black
+    MyScaffold() {
+        if (isLoading) {
+            FullScreenMessage(text = "Retrieving widgets...")
         } else {
-            var currentWidgetId by rememberSaveable { mutableStateOf(widgets.first().widgetId) }
+            // If no widgets, display message telling user to add widgets
+            if (widgets == null || widgets.isEmpty()) {
+                FullScreenMessage(text = "No widgets found... Go add one!")
+            } else {
+                var currentWidgetId by rememberSaveable { mutableStateOf(widgets.first().widgetId) }
 
-            val pagerState = rememberPagerState()
-            val pages = listOf("Background", "SoundByte")
+                val pagerState = rememberPagerState()
+                val pages = listOf("Background", "SoundByte")
 
-            val coroutineScope = rememberCoroutineScope()
+                val coroutineScope = rememberCoroutineScope()
 
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    modifier = Modifier.background(color = Color.Cyan),
-                    text = "${widgets.first().widgetId} ${widgets.first().background.name} " +
-                            "${widgets.first().soundByte.name}"
-                )
-                Text(text = "Widget Preview")
-                LazyColumnWithSelection(widgets, { widgetId -> currentWidgetId = widgetId })
-                Column(Modifier.weight(1f)) {
-                    TabRow(
-                        // Our selected tab is our current page
-                        selectedTabIndex = pagerState.currentPage,
-                        // Override the indicator, using the provided pagerTabIndicatorOffset
-                        // modifier
-                        indicator = { tabPositions ->
-                            TabRowDefaults.Indicator(
-                                Modifier.pagerTabIndicatorOffset(pagerState, tabPositions)
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(modifier = Modifier
+                        .background(HEADER_BACKGROUND_COLOR)
+                        .padding(12.dp)) {
+                        Text(
+                            text = "Widget Preview",
+                            color = HEADER_TEXT_COLOR,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.button.copy(
+                                textAlign = TextAlign.Center
                             )
-                        },
-                    ) {
-                        pages.forEachIndexed { index, title ->
-                            Tab(
-                                text = { Text(title) },
-                                selected = pagerState.currentPage == index,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        pagerState.scrollToPage(index)
-                                    }
-                                },
-                            )
-                        }
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
                     }
 
-                    HorizontalPager(
-                        count = pages.size,
-                        state = pagerState,
-                    ) { page ->
-                        Column() {
-                            if (pages[page] == "Background") {
-                                BackgroundPicker { background: WidgetBackground ->
-                                    updateWidgetBackground(currentWidgetId, background)
+//                val styledText: @Composable (() -> Unit)? = text?.let {
+//                    @Composable {
+//                        val style = MaterialTheme.typography.button.copy(textAlign = TextAlign
+//                        .Center)
+//                        ProvideTextStyle(style, content = text)
+//                    }
+//                }
+
+                    LazyColumnWithSelection(widgets, { widgetId -> currentWidgetId = widgetId })
+                    Column(Modifier.weight(1f)) {
+                        TabRow(
+                            // Our selected tab is our current page
+                            selectedTabIndex = pagerState.currentPage,
+                            // Override the indicator, using the provided pagerTabIndicatorOffset
+                            // modifier
+                            indicator = { tabPositions ->
+                                TabRowDefaults.Indicator(
+                                    Modifier.pagerTabIndicatorOffset(pagerState, tabPositions)
+                                )
+                            },
+                            backgroundColor = HEADER_BACKGROUND_COLOR,
+                            contentColor = HEADER_TEXT_COLOR
+                        ) {
+                            pages.forEachIndexed { index, title ->
+                                Tab(
+                                    text = { Text(title) },
+                                    selected = pagerState.currentPage == index,
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            pagerState.scrollToPage(index)
+                                        }
+                                    },
+                                )
+                            }
+                        }
+
+                        HorizontalPager(
+                            count = pages.size,
+                            state = pagerState,
+                        ) { page ->
+                            Column() {
+                                if (pages[page] == "Background") {
+                                    BackgroundPicker { background: WidgetBackground ->
+                                        updateWidgetBackground(currentWidgetId, background)
+                                    }
+                                } else {
+                                    SoundBytePicker(updateSoundByte = { soundByte: SoundByte ->
+                                        updateWidgetSoundByte(currentWidgetId, soundByte)
+                                    }, playSound = { soundByte: SoundByte ->
+                                        playSoundByte(soundByte)
+                                    })
                                 }
-                            } else {
-                                SoundBytePicker(updateSoundByte = { soundByte: SoundByte ->
-                                    updateWidgetSoundByte(currentWidgetId, soundByte)
-                                }, playSound = { soundByte: SoundByte ->
-                                    playSoundByte(soundByte)
-                                })
                             }
                         }
                     }
@@ -192,6 +217,24 @@ fun UpdateWidgetContent(
     }
 }
 
+@Composable
+fun FullScreenMessage(text: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = BACKGROUND_COLOR),
+        contentAlignment = Alignment.Center) {
+        Text(
+            text = text,
+            color = HEADER_BACKGROUND_COLOR,
+            fontSize = 32.sp,
+            modifier = Modifier.padding(16.dp),
+            style = MaterialTheme.typography.button.copy(
+                textAlign = TextAlign.Center
+            )
+        )
+    }
+}
 @Composable
 fun LazyColumnWithSelection(
     widgets: List<NachoWidget>,
@@ -203,78 +246,125 @@ fun LazyColumnWithSelection(
         nachoLog(index.toString())
         widgetSelected(widgets[index].widgetId)
     }
+
+    val listState = rememberLazyListState()
+    // Remember a CoroutineScope to be able to launch
+    val coroutineScope = rememberCoroutineScope()
+
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight(),
+            .background(color = BACKGROUND_COLOR)
+            .wrapContentHeight()
+            .padding(8.dp), state = listState
     ) {
         itemsIndexed(widgets) { index, widget ->
-            WidgetPreview(widget, modifier = Modifier
-                .clickable {
-                    onItemClick(index)
+            Box(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(4.dp)
+            ) {
+                val previewModifier = if (index == selectedIndex) {
+                    Modifier.background(Color.White, shape = RoundedCornerShape(8.dp))
+                } else {
+                    Modifier
                 }
-                .padding(8.dp))
-        }
-    }
-}
 
-@Preview
-@Composable
-fun PreviewLazyColumnWithSelection() {
-    NachoTheme() {
-        LazyColumnWithSelection(widgets = listOf(
-            NachoWidget(1, background = nachoBackgrounds[1], soundByte = nachoSoundBytes[1]),
-            NachoWidget(2, background = nachoBackgrounds[2], soundByte = nachoSoundBytes[2]),
-            NachoWidget(3, background = nachoBackgrounds[3], soundByte = nachoSoundBytes[3]),
-        ), {})
+                WidgetPreview(widget, modifier = previewModifier
+                    .padding(4.dp)
+                    .clickable {
+                        onItemClick(index)
+                        coroutineScope.launch {
+                            listState.animateScrollToItem(index)
+                        }
+                    })
+            }
+        }
     }
 }
 
 @Composable
 fun BackgroundPicker(updateBackground: (WidgetBackground) -> Unit) {
-    LazyVerticalGrid(columns = GridCells.Fixed(2), content = {
-        items(items = nachoBackgrounds) { widgetBackground ->
-            Box(modifier = Modifier.padding(16.dp)) {
-                WidgetPreview(
-                    NachoWidget(1, widgetBackground, nachoSoundBytes.first()),
-                    modifier = Modifier.clickable {
-                        updateBackground(widgetBackground)
-                    },
-                    backgroundOnly = true
-                )
-            }
-        }
-    })
-}
-
-@Composable
-fun SoundBytePicker(updateSoundByte: (SoundByte) -> Unit, playSound: (SoundByte) -> Unit) {
-    Surface() {
-
-        Column(
-            modifier = Modifier.verticalScroll(rememberScrollState())
-        ) {
-            nachoSoundBytes.forEach { soundByte ->
-                Row(
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = BACKGROUND_COLOR),
+        content = {
+            items(items = nachoBackgrounds) { widgetBackground ->
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .clickable {
-                            updateSoundByte(soundByte)
-                        }, verticalAlignment = Alignment.CenterVertically
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(painter = painterResource(id = R.drawable.ic_baseline_play_arrow_24),
-                        contentDescription = "play ${soundByte.name}",
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .clickable {
-                                playSound(soundByte)
-                            })
-                    Text(text = soundByte.name)
+                    WidgetPreview(
+                        NachoWidget(1, widgetBackground, nachoSoundBytes.first()),
+                        modifier = Modifier.clickable {
+                            updateBackground(widgetBackground)
+                        },
+                        backgroundOnly = true
+                    )
                 }
             }
         }
-    }
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun SoundBytePicker(
+    updateSoundByte: (SoundByte) -> Unit, playSound: (SoundByte) -> Unit
+) {
+    LazyVerticalStaggeredGrid(
+        columns = StaggeredGridCells.Fixed(2),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = BACKGROUND_COLOR),
+        content = {
+            items(items = nachoSoundBytes) { soundByte ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp)
+                ) {
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .alpha(.8f), onClick = {
+                            updateSoundByte(soundByte)
+                        }, border = BorderStroke(
+                            width = 4.dp, color = MaterialTheme.colors.primaryVariant
+                        )
+                    ) {
+                        Row (
+                          verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(painter = painterResource(
+                                id = R.drawable.ic_baseline_play_arrow_24
+                            ),
+                                contentDescription = "play ${soundByte.name}",
+                                modifier = Modifier
+                                    .clickable {
+                                        playSound(soundByte)
+                                    }
+                                    .padding(8.dp))
+                            Text(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .weight(1f),
+                                text = soundByte.name.capitalize(), // I get it, but I want to use this for the time being
+                                fontSize = 16.sp,
+                                textAlign = TextAlign.Start,
+                                color = Color.Black
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    )
 }
 
 @Composable
@@ -282,15 +372,16 @@ fun WidgetPreview(
     widget: NachoWidget,
     modifier: Modifier = Modifier,
     backgroundOnly: Boolean = false,
-    useCompose: Boolean = USE_COMPOSE_WIDGET_PREVIEW
+    useAndroidView: Boolean = USE_ANDROID_VIEW
 ) {
     Box(modifier = modifier) {
-        if (useCompose) {
-            WidgetPreviewCompose(
+        if (useAndroidView) {
+            WidgetPreviewAndroidView(
                 widget = widget, backgroundOnly = backgroundOnly
             )
+
         } else {
-            WidgetPreviewAndroidView(
+            WidgetPreviewCompose(
                 widget = widget, backgroundOnly = backgroundOnly
             )
         }
@@ -301,13 +392,18 @@ fun WidgetPreview(
 fun WidgetPreviewAndroidView(
     widget: NachoWidget, modifier: Modifier = Modifier, backgroundOnly: Boolean = false
 ) {
-    Box(modifier = modifier) {
+    Box(
+        modifier = modifier.clip(RoundedCornerShape(10.dp))
+    ) {
         AndroidView(factory = { context ->
             val view = LayoutInflater.from(context)
                 .inflate(R.layout.nacho_soundbyte_widget, null, false)
             val soundByteNameTV = view.findViewById<TextView>(R.id.soundbyte_name_tv)
             val soundByteBackgroundIV = view.findViewById<ImageView>(R.id.widget_background_iv)
             val nameAndButtonLL = view.findViewById<LinearLayout>(R.id.name_and_buttons_ll)
+
+            view.findViewById<ImageView>(R.id.play_ib).isClickable = false
+            view.findViewById<ImageView>(R.id.settings_ib).isClickable = false
 
             soundByteNameTV.text = widget.soundByte.name
             soundByteBackgroundIV.setBackgroundResource(widget.background.resourceId)
@@ -317,11 +413,11 @@ fun WidgetPreviewAndroidView(
 
             view
         }, modifier = Modifier
-            .width(144.dp)
-            .height(144.dp), update = { view ->
+            .width(WIDGET_WIDTH)
+            .height(WIDGET_HEIGHT), update = { view ->
             view.findViewById<TextView>(R.id.soundbyte_name_tv).text = widget.soundByte.name
             view.findViewById<ImageView>(R.id.widget_background_iv)
-                .setBackgroundResource(widget.background.resourceId)
+                .setImageResource(widget.background.resourceId)
         })
     }
 }
@@ -332,8 +428,9 @@ fun WidgetPreviewCompose(
 ) {
     Box(
         modifier = modifier
-            .width(144.dp)
-            .height(144.dp), contentAlignment = Alignment.Center
+            .width(WIDGET_WIDTH)
+            .height(WIDGET_HEIGHT),
+        contentAlignment = Alignment.Center
     ) {
 
         Image(
@@ -377,6 +474,33 @@ fun WidgetPreviewCompose(
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+fun PreviewUpdateWidgetContent() {
+    NachoTheme() {
+        UpdateWidgetContent(
+            widgets = listOf(
+                NachoWidget(1, background = nachoBackgrounds[1], soundByte = nachoSoundBytes[1]),
+                NachoWidget(2, background = nachoBackgrounds[4], soundByte = nachoSoundBytes[2]),
+                NachoWidget(3, background = nachoBackgrounds[8], soundByte = nachoSoundBytes[3]),
+            ),
+            isLoading = false, {a,b-> },{a,b ->},{}
+        )
+    }
+}
+
+@Preview
+@Composable
+fun PreviewLazyColumnWithSelection() {
+    NachoTheme() {
+        LazyColumnWithSelection(widgets = listOf(
+            NachoWidget(1, background = nachoBackgrounds[1], soundByte = nachoSoundBytes[1]),
+            NachoWidget(2, background = nachoBackgrounds[4], soundByte = nachoSoundBytes[2]),
+            NachoWidget(3, background = nachoBackgrounds[8], soundByte = nachoSoundBytes[3]),
+        ), {})
     }
 }
 

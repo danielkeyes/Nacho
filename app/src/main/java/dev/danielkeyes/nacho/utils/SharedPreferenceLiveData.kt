@@ -3,6 +3,10 @@ package dev.danielkeyes.nacho.utils
 import android.content.SharedPreferences
 import androidx.lifecycle.LiveData
 
+/**
+ * CURRENTLY NOT IN USE
+ * copied code for possible future refinements
+ */
 abstract class SharedPreferenceLiveData<T>(val sharedPrefs: SharedPreferences,
                                            val key: String,
                                            val defValue: T) : LiveData<T>() {

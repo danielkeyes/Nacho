@@ -44,7 +44,8 @@ class SharedPreferencesHelper {
             val prefs: SharedPreferences = context.getSharedPreferences(mSharedPrefFile, MODE_PRIVATE)
             val soundByteName: String? = prefs.getString(genKey(widgetID, SOUNDBYTE_KEY_SUFFIX), defaultValue.name)
 
-            // if name backgroundName isn't null and can retrieve background, return it, else, return default value
+            // if soundByteName isn't null and can retrieve background, return it, else, return
+            // default value
             return if(soundByteName != null) {
                 nachoSoundBytes.getSoundByte(soundByteName) ?: defaultValue
             } else {

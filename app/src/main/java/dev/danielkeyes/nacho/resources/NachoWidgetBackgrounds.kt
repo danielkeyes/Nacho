@@ -21,12 +21,16 @@ val nachoBackgrounds: List<WidgetBackground> =
         WidgetBackground("Stoic Nacho", R.drawable.widget_background_nacho_stoic),
     )
 
-private val defaultBackground = nachoBackgrounds.first()
-
+/**
+ * Retrieve WidgetBackground using [resourceID]
+ */
 fun List<WidgetBackground>.getBackground(resourceId: Int): WidgetBackground? {
-    return this.find { it.resourceId == resourceId } //?: defaultBackground
+    return this.find { it.resourceId == resourceId }
 }
 
+/**
+ * Retrieve first WidgetBackground that partially matches [name]
+ */
 fun List<WidgetBackground>.getBackground(name: String): WidgetBackground? {
-    return this.find { it.name.contains(name) } //?: defaultBackground
+    return this.find { it.name.contains(name) }
 }

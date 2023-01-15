@@ -5,45 +5,29 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
-
-private val DarkColorPalette = darkColors(
-    primary = NachoBlue,
-    primaryVariant = NachoBlueLight,
-    secondary = NachoRed,
-    secondaryVariant = NachoRedLight
-//    primary = NachoRed,
-//    primaryVariant = NachoRedLight,
-//    secondary = NachoBlue,
-//    secondaryVariant = NachoBlueLight
-)
+import androidx.compose.ui.graphics.Color
 
 private val LightColorPalette = lightColors(
     primary = NachoBlue,
     primaryVariant = NachoBlueDark,
     secondary = NachoRed,
     secondaryVariant = NachoRedDark,
-//    primary = NachoRed,
-//    primaryVariant = NachoRedDark,
-//    secondary = NachoBlue,
-//    secondaryVariant = NachoBlueDark
+    background = Color.Black,
+    surface = Color.Black,
+    error = Color(0xFFB00020),
+    onPrimary = Color.Black,
+    onSecondary = Color.White,
+    onBackground = Color.White,
+    onSurface = Color.White,
+    onError = Color.White
+)
 
-    /* Other default colors to override
-    background = Color.White,
-    surface = Color.White,
-    onPrimary = Color.White,
-    onSecondary = Color.Black,
-    onBackground = Color.Black,
-    onSurface = Color.Black,
-    */
+private val DarkColorPalette = darkColors(
 )
 
 @Composable
 fun NachoTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    val colors = if (darkTheme) {
-        DarkColorPalette
-    } else {
-        LightColorPalette
-    }
+    val colors = LightColorPalette
 
     MaterialTheme(
         colors = colors,

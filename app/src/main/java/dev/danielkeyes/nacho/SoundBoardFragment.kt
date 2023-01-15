@@ -14,10 +14,6 @@ import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -31,14 +27,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
-import androidx.navigation.NavHostController
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.findNavController
 import dev.danielkeyes.nacho.composables.MyScaffold
 import dev.danielkeyes.nacho.resources.SoundByte
 import dev.danielkeyes.nacho.resources.nachoSoundBytes
 import dev.danielkeyes.nacho.ui.theme.NachoTheme
 import dev.danielkeyes.nacho.utils.NachoMediaPlayer
-import kotlin.random.Random
 
 class SoundBoardFragment : Fragment() {
     override fun onCreateView(
@@ -49,14 +45,13 @@ class SoundBoardFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setContent {
                 val context = LocalContext.current
-                val navController = rememberNavController()
 
                 NachoTheme {
                     Surface(
                         modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
                     ) {
                         Content(
-                            navController,
+                            findNavController(),
                             nachoSounds = nachoSoundBytes,
                             playMedia = {
                                 NachoMediaPlayer.playSoundID(it, context)
@@ -77,14 +72,22 @@ class SoundBoardFragment : Fragment() {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Content(
-    navController: NavHostController,
+    navController: NavController,
     nachoSounds: List<SoundByte>,
     playMedia: (Int) -> Unit,
 ) {
-    MyScaffold(navController) { it ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(it)) {
+    val columns = 2
+
+    val dropDownOptions = listOf<Pair<String, () -> Unit>>(
+        Pair("Update Widget(s)") { navController.navigate(R.id.updateWidgetFragment) }
+    )
+
+    MyScaffold(dropDownOptions = dropDownOptions) { it ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it)
+        ) {
             Image(
                 painter = painterResource(id = R.drawable.nachoflyingsolo),
                 contentDescription = "",
@@ -92,13 +95,10 @@ fun Content(
             )
             Column(Modifier.fillMaxSize()) {
                 LazyVerticalStaggeredGrid(
-                    columns = StaggeredGridCells.Fixed(2), modifier = Modifier.weight(1f)
+                    columns = StaggeredGridCells.Fixed(columns), modifier = Modifier.weight(1f)
                 ) {
                     items(nachoSounds) { soundByte ->
-                        var favorite: Boolean by rememberSaveable { mutableStateOf(Random.nextBoolean()) }
                         SoundByteButton(soundByte = soundByte,
-                            isFavorite = favorite,
-                            favorite = { it -> favorite = it },
                             playMedia = { playMedia(soundByte.resourceId) })
                     }
                 }
@@ -107,11 +107,10 @@ fun Content(
     }
 }
 
+
 @Composable
 fun SoundByteButton(
     soundByte: SoundByte,
-    isFavorite: Boolean,
-    favorite: (Boolean) -> Unit,
     playMedia: (Int) -> Unit
 ) {
     Box(
@@ -137,16 +136,6 @@ fun SoundByteButton(
                 color = Color.Black
             )
         }
-
-//        Icon(
-//            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
-//            "favorite",
-//            modifier = Modifier
-//                .align(alignment = Alignment.TopEnd)
-//                .clickable { favorite(!isFavorite) }
-//                .padding(8.dp),
-//            tint = Color(0xFFFFD700)
-//        )
     }
 }
 
@@ -155,14 +144,8 @@ fun SoundByteButton(
 fun SoundBytePreview() {
     NachoTheme {
         Column {
-            SoundByteButton(soundByte = SoundByte("anaconda squeeze", 1),
-                isFavorite = true,
-                favorite = {},
-                playMedia = {})
-            SoundByteButton(soundByte = SoundByte("get that corn", 1),
-                isFavorite = false,
-                favorite = {},
-                playMedia = {})
+            SoundByteButton(soundByte = SoundByte("anaconda squeeze", 1), {})
+            SoundByteButton(soundByte = SoundByte("get that corn", 1), {})
         }
     }
 }
@@ -174,10 +157,5 @@ fun DefaultPreview() {
         Content(rememberNavController(), nachoSoundBytes, {})
     }
 }
-
-fun String.sanitizeSoundByteName(prefixIdentifier: String): String {
-    return this.removePrefix(prefixIdentifier).replace('_', ' ').trimStart()
-}
-
 
 
