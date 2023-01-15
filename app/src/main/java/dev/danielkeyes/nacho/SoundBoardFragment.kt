@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,15 +35,13 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import dev.danielkeyes.nacho.resources.SoundByte
 import dev.danielkeyes.nacho.resources.nachoSoundBytes
-import dev.danielkeyes.nacho.ui.theme.ElementBackgrounds
 import dev.danielkeyes.nacho.ui.theme.NachoTheme
 import dev.danielkeyes.nacho.utils.NachoMediaPlayer
 import kotlin.random.Random
 
 class SoundBoardFragment : Fragment() {
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         super.onCreate(savedInstanceState)
 
@@ -50,16 +49,18 @@ class SoundBoardFragment : Fragment() {
             setContent {
                 val context = LocalContext.current
 
-                    
+
                 NachoTheme {
                     // A surface container using the 'background' color from the theme
                     Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colors.background
+                        modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
                     ) {
                         Content(
-                            {findNavController().navigate(R.id
-                                .action_soundBoardFragment_to_updateWidgetFragment)},
+                            {
+                                findNavController().navigate(
+                                    R.id.action_soundBoardFragment_to_updateWidgetFragment
+                                )
+                            },
                             nachoSounds = nachoSoundBytes,
                             playMedia = {
                                 NachoMediaPlayer.playSoundID(it, context)
@@ -94,45 +95,60 @@ fun Content(
         contentDescription = "",
         contentScale = ContentScale.Crop
     )
-
-    LazyVerticalStaggeredGrid(
-        columns = StaggeredGridCells.Fixed(2)
-    ) {
-        item { 
-            Button(onClick = {
-                navigateUpdateWidget()
-            }) {
-                Text(text = "Update Widget")
+    Column(Modifier.fillMaxSize()) {
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(2), modifier = Modifier.weight(1f)
+        ) {
+            items(nachoSounds) { soundByte ->
+                var favorite: Boolean by rememberSaveable { mutableStateOf(Random.nextBoolean()) }
+                SoundByteButton(soundByte = soundByte,
+                    isFavorite = favorite,
+                    favorite = { it -> favorite = it },
+                    playMedia = { playMedia(soundByte.resourceId) })
             }
         }
-        items(nachoSounds) { soundByte ->
-
-            var favorite: Boolean by rememberSaveable { mutableStateOf(Random.nextBoolean()) }
-            SoundByteButton(soundByte = soundByte,
-                isFavorite = favorite,
-                favorite = { it -> favorite = it },
-                playMedia = { playMedia(soundByte.resourceId)}
+        Spacer(modifier = Modifier.fillMaxWidth().height(4.dp).background(color = MaterialTheme.colors.secondary))
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .alpha(.8f),
+            onClick = {
+                navigateUpdateWidget()
+            },
+        ) {
+            Text(
+                modifier = Modifier.padding(8.dp),
+                text = "Update Widgets",
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center,
+                color = Color.Black
             )
         }
     }
 }
 
 @Composable
-fun SoundByteButton(soundByte: SoundByte, isFavorite: Boolean, favorite: (Boolean) -> Unit, playMedia: (Int) -> Unit) {
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .padding(8.dp)) {
+fun SoundByteButton(
+    soundByte: SoundByte,
+    isFavorite: Boolean,
+    favorite: (Boolean) -> Unit,
+    playMedia: (Int) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
         Button(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(ElementBackgrounds)
                 .clip(RoundedCornerShape(10.dp))
                 .alpha(.8f),
             onClick = {
                 playMedia(soundByte.resourceId)
             },
-            colors = ButtonDefaults.buttonColors(backgroundColor = ElementBackgrounds)
-            ) {
+            border = BorderStroke(width = 4.dp, color = MaterialTheme.colors.primaryVariant)
+        ) {
             Text(
                 modifier = Modifier.padding(8.dp),
                 text = soundByte.name.capitalize(),
@@ -153,18 +169,17 @@ fun SoundByteButton(soundByte: SoundByte, isFavorite: Boolean, favorite: (Boolea
 //        )
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun SoundBytePreview() {
     NachoTheme {
         Column {
-            SoundByteButton(
-                soundByte = SoundByte("anaconda squeeze", 1),
+            SoundByteButton(soundByte = SoundByte("anaconda squeeze", 1),
                 isFavorite = true,
                 favorite = {},
                 playMedia = {})
-            SoundByteButton(
-                soundByte = SoundByte("get that corn", 1),
+            SoundByteButton(soundByte = SoundByte("get that corn", 1),
                 isFavorite = false,
                 favorite = {},
                 playMedia = {})
@@ -179,6 +194,7 @@ fun DefaultPreview() {
         Content({}, nachoSoundBytes, {}, {})
     }
 }
+
 fun String.sanitizeSoundByteName(prefixIdentifier: String): String {
     return this.removePrefix(prefixIdentifier).replace('_', ' ').trimStart()
 }

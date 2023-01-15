@@ -74,7 +74,6 @@ class NachoSoundByteWidget : AppWidgetProvider() {
         appWidgetId: Int,
         newOptions: Bundle?
     ) {
-        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
         if( context != null && appWidgetManager != null) {
             onUpdate(context, appWidgetManager, IntArray(appWidgetId))
         }

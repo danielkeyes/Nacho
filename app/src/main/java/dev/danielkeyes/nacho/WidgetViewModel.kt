@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
-import android.content.SharedPreferences
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -13,6 +11,7 @@ import dev.danielkeyes.nacho.resources.SoundByte
 import dev.danielkeyes.nacho.resources.WidgetBackground
 import dev.danielkeyes.nacho.resources.nachoBackgrounds
 import dev.danielkeyes.nacho.resources.nachoSoundBytes
+import dev.danielkeyes.nacho.utils.NachoMediaPlayer
 import dev.danielkeyes.nacho.utils.SharedPreferencesHelper
 import dev.danielkeyes.nacho.utils.nachoLog
 import dev.danielkeyes.nacho.widget.NachoSoundByteWidget
@@ -25,13 +24,8 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
     private val _widgets: MutableLiveData<List<NachoWidget>> = MutableLiveData(listOf())
     val widgets: LiveData<List<NachoWidget>> = _widgets
 
-    private val _isLoading: MutableLiveData<Boolean> = MutableLiveData(true)
+    private val _isLoading: MutableLiveData<Boolean> = MutableLiveData(false)
     val isLoading: LiveData<Boolean> = _isLoading
-
-    // list of widgets at a certain time
-    fun getWidgets(): List<NachoWidget>? {
-        return widgets.value
-    }
 
     init {
         nachoLog("WidgetViewModel: init")
@@ -49,8 +43,10 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
 
     fun refreshWidgets() {
         nachoLog("WidgetViewModel: refreshWidgets")
-        _isLoading.value = true
+        _isLoading.postValue(true)
+
         val widgetIds = getWidgetIDs()
+
         val widgets = mutableListOf<NachoWidget>()
         widgetIds.forEach { widgetId ->
             val background =
@@ -59,12 +55,9 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
                 SharedPreferencesHelper.getSoundByte(widgetId, context, nachoSoundBytes.first())
             widgets.add(NachoWidget(widgetId, background, soundByte))
         }
-        _widgets.postValue(widgets)
-        _isLoading.value = false
-    }
+        _widgets.postValue(widgets.toList())
 
-    fun updateWidget(widgetId: Int, background: WidgetBackground, soundByte: SoundByte) {
-
+        _isLoading.postValue(false)
     }
 
     fun updateWidgetBackground(widgetId: Int, background: WidgetBackground) {
@@ -75,12 +68,18 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
 
         val list = mutableListOf<NachoWidget>()
         _widgets.value?.forEach {
-            if (it.widgetId == widgetId) {
-                it.background = background
+            val a = NachoWidget(
+                it.widgetId,
+                it.background,
+                it.soundByte
+            )
+            if(a.widgetId == widgetId){
+                a.background = background
             }
-            list.add(it.copy())
+
+            list.add(a)
         }
-        _widgets.value = list
+        _widgets.postValue(list)
     }
 
     fun updateWidgetSoundByte(widgetId: Int, soundByte: SoundByte) {
@@ -89,46 +88,21 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
 
         SharedPreferencesHelper.setSoundByte(widgetId, soundByte, context)
 
-        nachoLog("before")
-        widgets.value?.forEach {
-            nachoLog(it.toString())
-        }
-
         val list = mutableListOf<NachoWidget>()
         _widgets.value?.forEach {
-            if (it.widgetId == widgetId) {
-                it.soundByte = soundByte
+            val a = NachoWidget(
+                it.widgetId,
+                it.background,
+                it.soundByte
+            )
+            if(a.widgetId == widgetId){
+                a.soundByte = soundByte
             }
-            list.add(it.copy())
+
+            list.add(a)
         }
+
         _widgets.postValue(list)
-
-        nachoLog("after")
-        widgets.value?.forEach {
-            nachoLog(it.toString())
-        }
-//        _widgets.notifyObserver()
-    }
-
-    //list += anotherList to use
-    operator fun <T> MutableLiveData<ArrayList<T>>.plusAssign(values: List<T>) {
-        val value = this.value ?: arrayListOf()
-        value.addAll(values)
-        this.value = value
-    }
-
-    private fun forceRefreshLiveData(){
-        val list = mutableListOf<NachoWidget>()
-        _widgets.value?.forEach {
-            list.add(it.copy())
-        }
-        _widgets.value = list
-    }
-
-    private fun <T> MutableLiveData<T>.notifyObserver() {
-        val list: MutableLiveData<T>
-        this.value
-        this.postValue(this.value)
     }
 
     fun updateWidgets() {
@@ -138,6 +112,10 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
             context = context,
             appWidgetManager = AppWidgetManager.getInstance(context)
         )
+    }
+
+    fun playSoundByte(soundByte: SoundByte) {
+        NachoMediaPlayer.playSoundID(soundByte.resourceId, context)
     }
 }
 

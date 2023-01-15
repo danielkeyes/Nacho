@@ -7,4 +7,12 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="nacho_red">#B8150C</color>
+    <color name="nacho_red_light">#F12537</color>
+    <color name="nacho_red_dark">#800000</color>
+    <color name="nacho_blue">#6FC3CB</color>
+    <color name="nacho_blue_light">#A2F6FE</color>
+    <color name="nacho_blue_dark">#3B929A</color>
+    <color name="nacho_flesh">#E5B086</color>
+    <color name="nacho_white">#DDD5C0</color>
 </resources>
