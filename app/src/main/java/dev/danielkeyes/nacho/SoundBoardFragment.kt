@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
@@ -32,7 +31,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
-import androidx.navigation.findNavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import dev.danielkeyes.nacho.composables.MyScaffold
 import dev.danielkeyes.nacho.resources.SoundByte
 import dev.danielkeyes.nacho.resources.nachoSoundBytes
 import dev.danielkeyes.nacho.ui.theme.NachoTheme
@@ -48,25 +49,17 @@ class SoundBoardFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setContent {
                 val context = LocalContext.current
-
+                val navController = rememberNavController()
 
                 NachoTheme {
-                    // A surface container using the 'background' color from the theme
                     Surface(
                         modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
                     ) {
                         Content(
-                            {
-                                findNavController().navigate(
-                                    R.id.action_soundBoardFragment_to_updateWidgetFragment
-                                )
-                            },
+                            navController,
                             nachoSounds = nachoSoundBytes,
                             playMedia = {
                                 NachoMediaPlayer.playSoundID(it, context)
-                            },
-                            stopMedia = {
-                                NachoMediaPlayer.stopPlaying()
                             },
                         )
                     }
@@ -81,48 +74,35 @@ class SoundBoardFragment : Fragment() {
     }
 }
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Content(
-    navigateUpdateWidget: () -> Unit,
+    navController: NavHostController,
     nachoSounds: List<SoundByte>,
     playMedia: (Int) -> Unit,
-    stopMedia: () -> Unit
 ) {
-    Image(
-        painter = painterResource(id = R.drawable.nachoflyingsolo),
-        contentDescription = "",
-        contentScale = ContentScale.Crop
-    )
-    Column(Modifier.fillMaxSize()) {
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Fixed(2), modifier = Modifier.weight(1f)
-        ) {
-            items(nachoSounds) { soundByte ->
-                var favorite: Boolean by rememberSaveable { mutableStateOf(Random.nextBoolean()) }
-                SoundByteButton(soundByte = soundByte,
-                    isFavorite = favorite,
-                    favorite = { it -> favorite = it },
-                    playMedia = { playMedia(soundByte.resourceId) })
-            }
-        }
-        Spacer(modifier = Modifier.fillMaxWidth().height(4.dp).background(color = MaterialTheme.colors.secondary))
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .alpha(.8f),
-            onClick = {
-                navigateUpdateWidget()
-            },
-        ) {
-            Text(
-                modifier = Modifier.padding(8.dp),
-                text = "Update Widgets",
-                fontSize = 24.sp,
-                textAlign = TextAlign.Center,
-                color = Color.Black
+    MyScaffold(navController) { it ->
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(it)) {
+            Image(
+                painter = painterResource(id = R.drawable.nachoflyingsolo),
+                contentDescription = "",
+                contentScale = ContentScale.Crop
             )
+            Column(Modifier.fillMaxSize()) {
+                LazyVerticalStaggeredGrid(
+                    columns = StaggeredGridCells.Fixed(2), modifier = Modifier.weight(1f)
+                ) {
+                    items(nachoSounds) { soundByte ->
+                        var favorite: Boolean by rememberSaveable { mutableStateOf(Random.nextBoolean()) }
+                        SoundByteButton(soundByte = soundByte,
+                            isFavorite = favorite,
+                            favorite = { it -> favorite = it },
+                            playMedia = { playMedia(soundByte.resourceId) })
+                    }
+                }
+            }
         }
     }
 }
@@ -191,7 +171,7 @@ fun SoundBytePreview() {
 @Composable
 fun DefaultPreview() {
     NachoTheme {
-        Content({}, nachoSoundBytes, {}, {})
+        Content(rememberNavController(), nachoSoundBytes, {})
     }
 }
 

@@ -67,7 +67,6 @@ class UpdateWidgetFragment : Fragment() {
 
         return ComposeView(requireContext()).apply {
             setContent {
-
                 NachoTheme() {
                     Surface() {
                         val widgets by widgetViewModel.widgets.observeAsState()
