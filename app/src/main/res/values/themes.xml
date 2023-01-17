@@ -2,12 +2,14 @@
 <resources>
     <style name="Theme.Nacho" parent="Theme.MaterialComponents.DayNight.NoActionBar">
 <!--        <item name="android:statusBarColor">@color/purple_700</item>-->
-        <item name="colorPrimary">@color/nacho_blue</item>
+        <item name="colorPrimary">@color/nacho_tights_blue</item>
         <item name="colorPrimaryVariant">@color/nacho_blue_light</item>
         <item name="colorPrimaryDark">@color/nacho_blue_dark</item>
         <item name="colorSecondary">@color/nacho_red</item>
         <item name="colorSecondaryVariant">@color/nacho_red_light</item>
-<!--        <item name="colorPrimary">@color/nacho_red</item>-->
+        <item name="android:statusBarColor">@color/nacho_tights_blue</item>
+        <item name="android:navigationBarColor">@color/nacho_tights_blue</item>
+        <!--        <item name="colorPrimary">@color/nacho_red</item>-->
 <!--        <item name="colorPrimaryVariant">@color/nacho_red_light</item>-->
 <!--        <item name="colorPrimaryDark">@color/nacho_red_dark</item>-->
 <!--        <item name="colorSecondary">@color/nacho_blue</item>-->

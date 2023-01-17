@@ -46,7 +46,7 @@ val nachoSoundBytes: List<SoundByte> =
 private val defaultSoundByte = nachoSoundBytes.first()
 
 /**
- * Retrieve first SoundByte that partially matches [resourceId]
+ * Retrieve SoundByte using [resourceId]
  */
 fun List<SoundByte>.getSoundByte(resourceId: Int): SoundByte {
     return this.find { it.resourceId == resourceId } ?: defaultSoundByte

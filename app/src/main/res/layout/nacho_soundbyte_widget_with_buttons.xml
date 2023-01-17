@@ -11,8 +11,8 @@
         android:layout_height="match_parent"
         android:contentDescription=""
         android:scaleType="centerCrop"
-        android:src="@drawable/nachoflyingsolo"
-        tools:src="@drawable/nachoflyingsolo" />
+        android:src="@drawable/nacho_widget_background_sidejumping"
+        tools:src="@drawable/nacho_widget_background_sidejumping" />
 
     <LinearLayout
         android:id="@+id/name_and_buttons_ll"

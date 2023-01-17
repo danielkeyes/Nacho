@@ -25,7 +25,7 @@ const val SCAFFOLD_ENABLED: Boolean = true
 @Composable
 fun MyScaffold(
     dropDownOptions: List<Pair<String, () -> Unit>>? = null,
-    background: Int = R.drawable.nacholibretitleonlysmall,
+    background: Int = R.drawable.nacholibretitleonlysmall2,
     content: @Composable (PaddingValues) -> Unit
 ) {
 

@@ -8,7 +8,7 @@ data class WidgetBackground(val name: String, val resourceId: Int) {
     }
 }
 
-val nachoBackgrounds: List<WidgetBackground> =
+val nachoBackgrounds2: List<WidgetBackground> =
     listOf(
         WidgetBackground("Flying Nacho", R.drawable.widget_background_nacho_flying_title),
         WidgetBackground("Nacho Head", R.drawable.widget_background_nacho_head),
@@ -19,6 +19,24 @@ val nachoBackgrounds: List<WidgetBackground> =
         WidgetBackground("Nacho Pointing", R.drawable.widget_background_nacho_pointing),
         WidgetBackground("Nacho Wrestling", R.drawable.widget_background_nacho_ring),
         WidgetBackground("Stoic Nacho", R.drawable.widget_background_nacho_stoic),
+    )
+
+val nachoBackgrounds: List<WidgetBackground> =
+    listOf(
+        WidgetBackground("Side Jumping", R.drawable.nacho_widget_background_sidejumping),
+        WidgetBackground("Nacho Bathroom", R.drawable.nacho_widget_background_bathroom),
+        WidgetBackground("Its the best", R.drawable.nacho_widget_background_itsthebest),
+        WidgetBackground("Down Look", R.drawable.nacho_widget_background_downlook),
+        WidgetBackground("Its the best 2", R.drawable.nacho_widget_background_itsthebest2),
+        WidgetBackground("Sneaking", R.drawable.nacho_widget_background_sneaking),
+        WidgetBackground("Flying", R.drawable.nacho_widget_background_flying),
+        WidgetBackground("Movie Poster", R.drawable.nacho_widget_background_movieposter),
+        WidgetBackground("Talking", R.drawable.nacho_widget_background_talking),
+        WidgetBackground("Flying2", R.drawable.nacho_widget_background_flying2),
+        WidgetBackground("Pointing", R.drawable.nacho_widget_background_pointing),
+        WidgetBackground("Wrestle over the shoulder", R.drawable.nacho_widget_background_wrestleovertheshoulder),
+        WidgetBackground("Flying3", R.drawable.nacho_widget_background_flying3),
+        WidgetBackground("Scream pain", R.drawable.nacho_widget_background_screampain),
     )
 
 /**

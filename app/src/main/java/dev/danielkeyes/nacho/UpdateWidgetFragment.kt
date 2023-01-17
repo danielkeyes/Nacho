@@ -4,6 +4,7 @@ import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.OnLongClickListener
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -58,12 +59,13 @@ import dev.danielkeyes.nacho.ui.theme.NachoRed
 import dev.danielkeyes.nacho.ui.theme.NachoTheme
 import dev.danielkeyes.nacho.utils.nachoLog
 import kotlinx.coroutines.launch
-
+import android.widget.Toast
+import dev.danielkeyes.nacho.ui.theme.NachoTightsBlue
 
 const val USE_ANDROID_VIEW = true
 val WIDGET_HEIGHT = 115.dp
 val WIDGET_WIDTH = 144.dp
-val BACKGROUND_COLOR: Color = NachoBlue
+val BACKGROUND_COLOR: Color = NachoTightsBlue
 val HEADER_BACKGROUND_COLOR: Color = NachoRed
 val HEADER_TEXT_COLOR: Color = Color.White
 
@@ -133,8 +135,6 @@ fun UpdateWidgetContent(
             } else {
                 var currentWidgetId by rememberSaveable { mutableStateOf(widgets.first().widgetId) }
 
-                val pagerState = rememberPagerState()
-                val pages = listOf("Background", "SoundByte")
 
                 val coroutineScope = rememberCoroutineScope()
 
@@ -156,13 +156,9 @@ fun UpdateWidgetContent(
                         Spacer(modifier = Modifier.weight(1f))
                     }
 
-//                val styledText: @Composable (() -> Unit)? = text?.let {
-//                    @Composable {
-//                        val style = MaterialTheme.typography.button.copy(textAlign = TextAlign
-//                        .Center)
-//                        ProvideTextStyle(style, content = text)
-//                    }
-//                }
+                    val pagerState = rememberPagerState()
+                    val pages = listOf("Background", "SoundByte")
+//                    val pages = listOf("Style", "Background", "SoundByte")
 
                     LazyColumnWithSelection(widgets, { widgetId -> currentWidgetId = widgetId })
                     Column(Modifier.weight(1f)) {
@@ -192,16 +188,22 @@ fun UpdateWidgetContent(
                             }
                         }
 
-                        HorizontalPager(
+                        HorizontalPager (
                             count = pages.size,
                             state = pagerState,
                         ) { page ->
                             Column() {
+//                                if (pages[page] == "Style") {
+//                                    StylePicker()
+////                                    StylePicker { style: WidgetStyle ->
+////                                        updateWidgetStyle(currentWidgetId, style)
+////                                    }
+//                                } else
                                 if (pages[page] == "Background") {
                                     BackgroundPicker { background: WidgetBackground ->
                                         updateWidgetBackground(currentWidgetId, background)
                                     }
-                                } else {
+                                } else if (pages[page] == "SoundByte"){
                                     SoundBytePicker(updateSoundByte = { soundByte: SoundByte ->
                                         updateWidgetSoundByte(currentWidgetId, soundByte)
                                     }, playSound = { soundByte: SoundByte ->
@@ -216,6 +218,33 @@ fun UpdateWidgetContent(
         }
     }
 }
+
+@Composable
+fun StylePicker() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = BACKGROUND_COLOR),
+        content = {
+            Row() {
+                WidgetPreview(
+                    widget = NachoWidget(
+                        1,
+                        nachoBackgrounds.first(),
+                        nachoSoundBytes.first()
+                    )
+                )
+
+            }
+
+            WidgetPreviewAndroidView2(widget = NachoWidget(
+                1,
+                nachoBackgrounds.first(),
+                nachoSoundBytes.first()
+            ))
+
+        }
+    )}
 
 @Composable
 fun FullScreenMessage(text: String) {
@@ -397,7 +426,7 @@ fun WidgetPreviewAndroidView(
     ) {
         AndroidView(factory = { context ->
             val view = LayoutInflater.from(context)
-                .inflate(R.layout.nacho_soundbyte_widget, null, false)
+                .inflate(R.layout.nacho_soundbyte_widget_with_buttons, null, false)
             val soundByteNameTV = view.findViewById<TextView>(R.id.soundbyte_name_tv)
             val soundByteBackgroundIV = view.findViewById<ImageView>(R.id.widget_background_iv)
             val nameAndButtonLL = view.findViewById<LinearLayout>(R.id.name_and_buttons_ll)
@@ -409,6 +438,56 @@ fun WidgetPreviewAndroidView(
             soundByteBackgroundIV.setBackgroundResource(widget.background.resourceId)
             if (backgroundOnly) {
                 nameAndButtonLL.visibility = View.GONE
+            }
+
+            view
+        }, modifier = Modifier
+            .width(WIDGET_WIDTH)
+            .height(WIDGET_HEIGHT), update = { view ->
+            view.findViewById<TextView>(R.id.soundbyte_name_tv).text = widget.soundByte.name
+            view.findViewById<ImageView>(R.id.widget_background_iv)
+                .setImageResource(widget.background.resourceId)
+        })
+    }
+}
+
+@Composable
+fun WidgetPreviewAndroidView2(
+    widget: NachoWidget, modifier: Modifier = Modifier, backgroundOnly: Boolean = false
+) {
+    Box(
+        modifier = modifier.clip(RoundedCornerShape(10.dp))
+    ) {
+        AndroidView(factory = { context ->
+            val view = LayoutInflater.from(context)
+                .inflate(R.layout.nacho_soundbyte_widget_text_only, null, false)
+            val soundByteNameTV = view.findViewById<TextView>(R.id.soundbyte_name_tv)
+            val soundByteBackgroundIV = view.findViewById<ImageView>(R.id.widget_background_iv)
+
+            soundByteNameTV.text = widget.soundByte.name
+            soundByteBackgroundIV.setBackgroundResource(widget.background.resourceId)
+
+            soundByteNameTV.setOnClickListener {
+                Toast.makeText(
+                    soundByteNameTV.getContext(),
+                    "tapped on: " + soundByteNameTV.getText(),
+                    Toast.LENGTH_SHORT
+                ).show()
+                false
+            }
+
+            soundByteNameTV.setOnLongClickListener {
+                Toast.makeText(
+                    soundByteNameTV.getContext(),
+                    "Long-tapped on: " + soundByteNameTV.getText(),
+                    Toast.LENGTH_SHORT
+                ).show()
+                false
+            }
+
+
+            if (backgroundOnly) {
+                soundByteNameTV.visibility = View.GONE
             }
 
             view

@@ -89,7 +89,7 @@ fun Content(
                 .padding(it)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.nachoflyingsolo),
+                painter = painterResource(id = R.drawable.nachoflyingsolo2),
                 contentDescription = "",
                 contentScale = ContentScale.Crop
             )

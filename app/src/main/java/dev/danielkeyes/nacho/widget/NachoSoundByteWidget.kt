@@ -89,7 +89,7 @@ fun updateWidgets(
     appWidgetManager: AppWidgetManager
 ) {
     for (appWidgetId in appWidgetIds) {
-        val views = RemoteViews(context.packageName, R.layout.nacho_soundbyte_widget)
+        val views = RemoteViews(context.packageName, R.layout.nacho_soundbyte_widget_with_buttons)
 
         // retrieve widget Background and Soundbyte
         val background = SharedPreferencesHelper.getBackground(appWidgetId, context, nachoBackgrounds.first())
