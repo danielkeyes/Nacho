@@ -18,11 +18,13 @@ import dev.danielkeyes.nacho.resources.nachoBackgrounds
 import dev.danielkeyes.nacho.resources.nachoSoundBytes
 import dev.danielkeyes.nacho.utils.NachoMediaPlayer
 import dev.danielkeyes.nacho.utils.SharedPreferencesHelper
+import dev.danielkeyes.nacho.utils.nachoLog
 
 
 private const val PLAY_CLICKED = "playButtonClick"
 private const val SETTINGS_CLICKED = "settingsButtonClick"
 private const val SOUNDBYTE_EXTRA = "soundByteExtra"
+private const val WIDGET_ID = "widgetID"
 
 private val flags =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -38,7 +40,15 @@ class NachoSoundByteWidget : AppWidgetProvider() {
         if (PLAY_CLICKED == intent.action) {
             // Get soundByte and play it
             val soundByteId = intent.getIntExtra(SOUNDBYTE_EXTRA, nachoSoundBytes.first().resourceId)
+            nachoLog("NachoSoundByteWidget: onReceive PLAY_CLICKED soundByteId:${soundByteId}")
+
             val soundByte = nachoSoundBytes.getSoundByte(soundByteId)
+
+            val widgetID = intent.getIntExtra(WIDGET_ID, -1)
+
+            nachoLog("NachoSoundByteWidget: onReceive PLAY_CLICKED name:${soundByte.name}")
+            nachoLog("NachoSoundByteWidget: onReceive PLAY_CLICKED resourceId:${soundByte.resourceId}")
+            nachoLog("NachoSoundByteWidget: onReceive PLAY_CLICKED widgetID:${widgetID}")
             NachoMediaPlayer.playSoundID(soundByte.resourceId, context)
 
             // update widgets
@@ -74,6 +84,10 @@ class NachoSoundByteWidget : AppWidgetProvider() {
         }
     }
 
+    override fun onDeleted(context: Context?, appWidgetIds: IntArray?) {
+        super.onDeleted(context, appWidgetIds)
+    }
+
     override fun onEnabled(context: Context) {
         // Enter relevant functionality for when the first widget is created
     }
@@ -88,7 +102,7 @@ fun updateWidgets(
     context: Context,
     appWidgetManager: AppWidgetManager
 ) {
-    for (appWidgetId in appWidgetIds) {
+    appWidgetIds.forEach  { appWidgetId ->
         val views = RemoteViews(context.packageName, R.layout.nacho_soundbyte_widget_with_buttons)
 
         // retrieve widget Background and Soundbyte
@@ -105,8 +119,10 @@ fun updateWidgets(
         val playIntent = Intent(context, NachoSoundByteWidget::class.java)
         playIntent.action = PLAY_CLICKED
         playIntent.putExtra(SOUNDBYTE_EXTRA, soundByte.resourceId)
-        val playPendingIntent = PendingIntent.getBroadcast(context,0,playIntent, flags)
+        playIntent.putExtra(WIDGET_ID, appWidgetId)
+        val playPendingIntent = PendingIntent.getBroadcast(context, appWidgetId, playIntent, flags)
         views.setOnClickPendingIntent(R.id.play_ib, playPendingIntent)
+
 
         // Set setting button to navigate to updateWidgetFragment
         val pendingIntent = NavDeepLinkBuilder(context)

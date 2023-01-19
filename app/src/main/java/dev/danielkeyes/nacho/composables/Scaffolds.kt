@@ -10,6 +10,7 @@ import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -85,13 +86,21 @@ fun DropDownOptions(
                     contentDescription = "Menu"
                 )
             }
-            DropdownMenu(expanded = expandMenu,
+            DropdownMenu(
+                expanded = expandMenu,
+                modifier = Modifier.background(color = Color.White),
                 onDismissRequest = { expandMenu = false }) {
                 dropDownOptions.forEach {
                     DropdownMenuItem(
-                        onClick = { it.second() }
+                        onClick = {
+                            it.second()
+                            expandMenu = false
+                        }
                     ) {
-                        Text(it.first)
+                        Text(
+                            it.first,
+                            color = Color.Black
+                        )
                     }
                 }
                 if (BuildConfig.DEBUG) {

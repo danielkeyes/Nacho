@@ -2,6 +2,7 @@ package dev.danielkeyes.nacho
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.appwidget.AppWidgetHost
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import androidx.lifecycle.AndroidViewModel
@@ -34,12 +35,15 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun getWidgetIDs(): List<Int> {
-        val widgetIds = AppWidgetManager.getInstance(context)
-            .getAppWidgetIds(ComponentName(context, NachoSoundByteWidget::class.java))
+        val appWidgetManager = AppWidgetManager.getInstance(context)
+        val widgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context,
+            NachoSoundByteWidget::class.java))
+
         nachoLog("Widget total: ${widgetIds.size}")
         widgetIds.forEach {
             nachoLog(it.toString())
         }
+
         return widgetIds.toList()
     }
 
@@ -61,7 +65,7 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
 
         // This helps the loading true -> false to not be to quick
         viewModelScope.launch {
-            delay(1000)
+            delay(1500)
             _isLoading.postValue(false)
         }
     }
@@ -116,5 +120,13 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
 
     fun playSoundByte(soundByte: SoundByte) {
         NachoMediaPlayer.playSoundID(soundByte.resourceId, context)
+    }
+
+    fun deleteAllWidgets(){
+        val host = AppWidgetHost(context, 0)
+        getWidgetIDs().forEach {
+            host.deleteAppWidgetId(it)
+        }
+        refreshWidgets()
     }
 }
