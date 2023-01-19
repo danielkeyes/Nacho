@@ -8,7 +8,6 @@ import dev.danielkeyes.nacho.resources.*
 private const val mSharedPrefFile = "dev.danielkeyes.nacho"
 private const val BACKGROUND_KEY_SUFFIX = "background"
 private const val SOUNDBYTE_KEY_SUFFIX = "soundbyte"
-private const val WIDGET_STYLE_KEY_SUFFIX = "widgetStyle"
 
 class SharedPreferencesHelper {
 
@@ -27,7 +26,7 @@ class SharedPreferencesHelper {
 
             // if name backgroundName isn't null and can retrieve background, return it, else, return default value
             return if(backgroundName != null) {
-                nachoBackgrounds.getBackground(backgroundName) ?: defaultValue
+                widgetBackgrounds.getBackground(backgroundName) ?: defaultValue
             } else {
                 defaultValue
             }
@@ -48,28 +47,7 @@ class SharedPreferencesHelper {
             // if soundByteName isn't null and can retrieve soundByte, return it, else, return
             // default value
             return if(soundByteName != null) {
-                nachoSoundBytes.getSoundByte(soundByteName) ?: defaultValue
-            } else {
-                defaultValue
-            }
-        }
-
-        fun setWidgetStyle(widgetID: Int, style: WidgetStyle, context: Context) {
-            val prefs: SharedPreferences = context.getSharedPreferences(mSharedPrefFile, MODE_PRIVATE)
-            prefs.edit().putString(genKey(widgetID, WIDGET_STYLE_KEY_SUFFIX), style.name).apply()
-        }
-
-        /**
-         * get WidgetStyle for widgetId, if can't find a WidgetStyle for widgetID, use default
-         */
-        fun getWidgetStyle(widgetID: Int, context: Context, defaultValue: WidgetStyle): WidgetStyle {
-            val prefs: SharedPreferences = context.getSharedPreferences(mSharedPrefFile, MODE_PRIVATE)
-            val widgetStyleName: String? = prefs.getString(genKey(widgetID, WIDGET_STYLE_KEY_SUFFIX), defaultValue.name)
-
-            // if widgetStyleName isn't null and can retrieve widgetStyle, return it, else, return
-            // default value
-            return if(widgetStyleName != null) {
-                nachoWidgetStyles.getWidgetStyle(widgetStyleName) ?: defaultValue
+                soundBytes.getSoundByte(soundByteName) ?: defaultValue
             } else {
                 defaultValue
             }

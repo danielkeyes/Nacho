@@ -15,21 +15,22 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import dev.danielkeyes.nacho.BuildConfig
 import dev.danielkeyes.nacho.R
-import dev.danielkeyes.nacho.ui.theme.NachoTheme
+import dev.danielkeyes.nacho.ui.theme.SoundBoardTheme
 
+const val SCAFFOLD_BACKGROUND = R.drawable.nacho_libre_title
 const val SCAFFOLD_ENABLED: Boolean = true
 
 @Composable
 fun MyScaffold(
     dropDownOptions: List<Pair<String, () -> Unit>>? = null,
-    background: Int = R.drawable.nacholibretitleonlysmall2,
+    background: Int = SCAFFOLD_BACKGROUND,
+    dropDownOptionsIconColor: Color = Color.White,
+    dropDownOptionsBackgroundColor: Color = Color.White,
+    dropDownOptionsOptionsColor: Color = Color.Black,    
     content: @Composable (PaddingValues) -> Unit
 ) {
-
     if (SCAFFOLD_ENABLED) {
         Scaffold(
             topBar = {
@@ -49,7 +50,10 @@ fun MyScaffold(
                             Spacer(modifier = Modifier.weight(1f))
                             DropDownOptions(
                                 dropDownOptions,
-                                modifier = Modifier.wrapContentSize(Alignment.TopStart)
+                                modifier = Modifier.wrapContentSize(Alignment.TopStart),
+                                dropDownOptionsIconColor,
+                                dropDownOptionsBackgroundColor,
+                                dropDownOptionsOptionsColor,
                             )
                         }
                     }
@@ -67,12 +71,10 @@ fun MyScaffold(
 fun DropDownOptions(
     dropDownOptions: List<Pair<String, () -> Unit>>?,
     modifier: Modifier = Modifier,
+    iconColor: Color = Color.White,
+    backgroundColor: Color = Color.White,
+    optionsColor: Color = Color.Black,
 ) {
-    // https://developer.android
-    // .com/reference/kotlin/androidx/compose/material/package-summary
-    // #DropdownMenu(kotlin.Boolean,kotlin.Function0,androidx.compose.ui
-    // .Modifier,androidx.compose.ui.unit.DpOffset,androidx.compose.ui.window
-    // .PopupProperties,kotlin.Function1)
     var expandMenu by remember { mutableStateOf(false) }
 
     if (dropDownOptions != null && dropDownOptions.isNotEmpty()) {
@@ -83,12 +85,13 @@ fun DropDownOptions(
             IconButton(onClick = { expandMenu = true }) {
                 Icon(
                     imageVector = Icons.Rounded.MoreVert,
-                    contentDescription = "Menu"
+                    contentDescription = "Menu",
+                    tint = iconColor,
                 )
             }
             DropdownMenu(
                 expanded = expandMenu,
-                modifier = Modifier.background(color = Color.White),
+                modifier = Modifier.background(color = backgroundColor),
                 onDismissRequest = { expandMenu = false }) {
                 dropDownOptions.forEach {
                     DropdownMenuItem(
@@ -99,7 +102,7 @@ fun DropDownOptions(
                     ) {
                         Text(
                             it.first,
-                            color = Color.Black
+                            color = optionsColor
                         )
                     }
                 }
@@ -112,7 +115,9 @@ fun DropDownOptions(
 }
 
 @Composable
-fun ScaffoldTitleBar(background: Int) {
+fun ScaffoldTitleBar(
+    background: Int
+) {
     Row(
         modifier = Modifier.height(IntrinsicSize.Max),
         verticalAlignment = Alignment.CenterVertically
@@ -133,7 +138,7 @@ fun ScaffoldTitleBar(background: Int) {
 @Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
 @Composable
 fun PreviewMyScaffold() {
-    NachoTheme() {
+    SoundBoardTheme() {
         MyScaffold(dropDownOptions = listOf(Pair("something", {}))) {
         }
     }

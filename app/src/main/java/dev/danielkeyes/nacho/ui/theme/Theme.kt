@@ -7,7 +7,7 @@ import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val LightColorPalette = lightColors(
+private val SingleColorPalette = lightColors(
     primary = NachoTightsBlue,
     primaryVariant = NachoBlueDark,
     secondary = NachoRed,
@@ -22,12 +22,25 @@ private val LightColorPalette = lightColors(
     onError = Color.White
 )
 
+private val LightColorPalette = lightColors(
+
+)
+
 private val DarkColorPalette = darkColors(
 )
 
+// Set to never use
 @Composable
-fun NachoTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    val colors = LightColorPalette
+fun SoundBoardTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () ->
+Unit) {
+    // Not using dark or light, single color palette
+    val colors = if (true) {
+        SingleColorPalette
+    } else if (darkTheme) {
+        LightColorPalette
+    } else {
+        DarkColorPalette
+    }
 
     MaterialTheme(
         colors = colors,

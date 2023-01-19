@@ -28,7 +28,7 @@
                 android:value="" />
         </activity>
         <receiver
-            android:name=".widget.NachoSoundByteWidget"
+            android:name=".widget.SoundByteWidget"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

@@ -32,9 +32,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.findNavController
 import dev.danielkeyes.nacho.composables.MyScaffold
 import dev.danielkeyes.nacho.resources.SoundByte
-import dev.danielkeyes.nacho.resources.nachoSoundBytes
-import dev.danielkeyes.nacho.ui.theme.NachoTheme
-import dev.danielkeyes.nacho.utils.NachoMediaPlayer
+import dev.danielkeyes.nacho.resources.soundBytes
+import dev.danielkeyes.nacho.ui.theme.SoundBoardTheme
+import dev.danielkeyes.nacho.utils.MyMediaPlayer
+
+const val FULL_SIZE_BACKGROUND = R.drawable.nacho_libre_flying_solo
 
 class SoundBoardFragment : Fragment() {
     override fun onCreateView(
@@ -42,19 +44,23 @@ class SoundBoardFragment : Fragment() {
     ): View {
         super.onCreate(savedInstanceState)
 
+        val soundBytes = soundBytes
+        val background = FULL_SIZE_BACKGROUND
+
         return ComposeView(requireContext()).apply {
             setContent {
                 val context = LocalContext.current
 
-                NachoTheme {
+                SoundBoardTheme {
                     Surface(
                         modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
                     ) {
-                        Content(
+                        SoundBoard(
                             findNavController(),
-                            nachoSounds = nachoSoundBytes,
+                            soundBytes = soundBytes,
+                            background = background,
                             playMedia = {
-                                NachoMediaPlayer.playSoundID(it, context)
+                                MyMediaPlayer.playSoundID(it, context)
                             },
                         )
                     }
@@ -64,16 +70,17 @@ class SoundBoardFragment : Fragment() {
     }
 
     override fun onPause() {
-        NachoMediaPlayer.stopPlaying()
+        MyMediaPlayer.stopPlaying()
         super.onPause()
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Content(
+fun SoundBoard(
     navController: NavController,
-    nachoSounds: List<SoundByte>,
+    soundBytes: List<SoundByte>,
+    background: Int,
     playMedia: (Int) -> Unit,
 ) {
     val columns = 2
@@ -89,15 +96,16 @@ fun Content(
                 .padding(it)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.nachoflyingsolo2),
+                painter = painterResource(id = background),
                 contentDescription = "",
                 contentScale = ContentScale.Crop
             )
             Column(Modifier.fillMaxSize()) {
                 LazyVerticalStaggeredGrid(
-                    columns = StaggeredGridCells.Fixed(columns), modifier = Modifier.weight(1f)
+                    columns = StaggeredGridCells.Fixed(columns),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    items(nachoSounds) { soundByte ->
+                    items(soundBytes) { soundByte ->
                         SoundByteButton(soundByte = soundByte,
                             playMedia = { playMedia(soundByte.resourceId) })
                     }
@@ -142,10 +150,10 @@ fun SoundByteButton(
 @Preview(showBackground = true)
 @Composable
 fun SoundBytePreview() {
-    NachoTheme {
+    SoundBoardTheme {
         Column {
-            SoundByteButton(soundByte = SoundByte("anaconda squeeze", 1), {})
-            SoundByteButton(soundByte = SoundByte("get that corn", 1), {})
+            SoundByteButton(soundByte = SoundByte("Sound 1", 1), {})
+            SoundByteButton(soundByte = SoundByte("Second Sound", 1), {})
         }
     }
 }
@@ -153,8 +161,8 @@ fun SoundBytePreview() {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    NachoTheme {
-        Content(rememberNavController(), nachoSoundBytes, {})
+    SoundBoardTheme {
+        SoundBoard(rememberNavController(), soundBytes, FULL_SIZE_BACKGROUND, {})
     }
 }
 

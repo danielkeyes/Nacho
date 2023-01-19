@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <ImageView
+        android:id="@+id/widget_background_iv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription=""
+        android:scaleType="centerCrop"
+        android:src="@drawable/nacho_widget_background_sidejumping"
+        tools:src="@drawable/nacho_widget_background_sidejumping" />
+
+    <LinearLayout
+        android:id="@+id/text_and_button_LL"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/rounder_corner_nacho"
+        android:gravity="center"
+        android:layout_gravity="center"
+        >
+        <TextView
+            android:id="@+id/soundbyte_name_tv"
+            tools:text="I wanna win"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:padding="16dp"
+            android:ellipsize="end"
+            android:text="I wanna win"
+            android:textAlignment="center"
+            android:textSize="18sp"
+            android:textStyle="bold|italic"
+            android:textColor="@color/black"
+            />
+        <ImageView
+            android:id="@+id/play_iv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#6603DAC5"
+            android:contentDescription=""
+            android:minWidth="48dp"
+            android:minHeight="48dp"
+            android:src="@drawable/ic_baseline_play_arrow_24" />
+    </LinearLayout>
+
+</FrameLayout>
