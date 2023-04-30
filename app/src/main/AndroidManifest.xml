@@ -28,7 +28,7 @@
                 android:value="" />
         </activity>
         <receiver
-            android:name=".widget.SoundByteWidget"
+            android:name=".widget.SoundbiteWidget"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -36,7 +36,7 @@
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/soundbyte_widget_info" />
+                android:resource="@xml/soundbite_widget_info" />
         </receiver>
     </application>
 

@@ -7,7 +7,7 @@ import dev.danielkeyes.nacho.resources.*
 
 private const val mSharedPrefFile = "dev.danielkeyes.nacho"
 private const val BACKGROUND_KEY_SUFFIX = "background"
-private const val SOUNDBYTE_KEY_SUFFIX = "soundbyte"
+private const val SOUNDBITE_KEY_SUFFIX = "soundbite"
 
 class SharedPreferencesHelper {
 
@@ -32,22 +32,22 @@ class SharedPreferencesHelper {
             }
         }
 
-        fun setSoundByte(widgetID: Int, soundByte: SoundByte, context: Context) {
+        fun setSoundbite(widgetID: Int, soundbite: Soundbite, context: Context) {
             val prefs: SharedPreferences = context.getSharedPreferences(mSharedPrefFile, MODE_PRIVATE)
-            prefs.edit().putString(genKey(widgetID, SOUNDBYTE_KEY_SUFFIX), soundByte.name).apply()
+            prefs.edit().putString(genKey(widgetID, SOUNDBITE_KEY_SUFFIX), soundbite.name).apply()
         }
 
         /**
-         * get SoundByte for widgetId, if can't find a SoundByte for widgetID, use default
+         * get Soundbite for widgetId, if can't find a Soundbite for widgetID, use default
          */
-        fun getSoundByte(widgetID: Int, context: Context, defaultValue: SoundByte): SoundByte {
+        fun getSoundbite(widgetID: Int, context: Context, defaultValue: Soundbite): Soundbite {
             val prefs: SharedPreferences = context.getSharedPreferences(mSharedPrefFile, MODE_PRIVATE)
-            val soundByteName: String? = prefs.getString(genKey(widgetID, SOUNDBYTE_KEY_SUFFIX), defaultValue.name)
+            val soundbiteName: String? = prefs.getString(genKey(widgetID, SOUNDBITE_KEY_SUFFIX), defaultValue.name)
 
-            // if soundByteName isn't null and can retrieve soundByte, return it, else, return
+            // if soundbiteName isn't null and can retrieve soundbite, return it, else, return
             // default value
-            return if(soundByteName != null) {
-                soundBytes.getSoundByte(soundByteName) ?: defaultValue
+            return if(soundbiteName != null) {
+                soundbites.getSoundbite(soundbiteName) ?: defaultValue
             } else {
                 defaultValue
             }

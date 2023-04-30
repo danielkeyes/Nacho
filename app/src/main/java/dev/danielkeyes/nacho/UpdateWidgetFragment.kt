@@ -97,15 +97,15 @@ class UpdateWidgetFragment : Fragment() {
 
                         UpdateWidgetContent(widgets = widgets,
                             isLoading = isLoading,
-                            playSoundByte = { soundByte ->
-                                widgetViewModel.playSoundByte(soundByte)
+                            playSoundbite = { soundbite ->
+                                widgetViewModel.playSoundbite(soundbite)
                             },
                             updateWidgetBackground = { widgetID: Int, background:
                             WidgetBackground ->
                                 widgetViewModel.updateWidgetBackground(widgetID, background)
                             },
-                            updateWidgetSoundByte = { widgetID: Int, soundByte: SoundByte ->
-                                widgetViewModel.updateWidgetSoundByte(widgetID, soundByte)
+                            updateWidgetSoundbite = { widgetID: Int, soundbite: Soundbite ->
+                                widgetViewModel.updateWidgetSoundbite(widgetID, soundbite)
                             },
                             deleteAllWidgets = {
                                 widgetViewModel.deleteAllWidgets()
@@ -137,8 +137,8 @@ fun UpdateWidgetContent(
     widgets: List<MyWidgetDO>?,
     isLoading: Boolean,
     updateWidgetBackground: (Int, WidgetBackground) -> Unit,
-    updateWidgetSoundByte: (Int, SoundByte) -> Unit,
-    playSoundByte: (SoundByte) -> Unit,
+    updateWidgetSoundbite: (Int, Soundbite) -> Unit,
+    playSoundbite: (Soundbite) -> Unit,
     deleteAllWidgets: () -> Unit,
     refreshWidgets: () -> Unit,
 ) {
@@ -191,7 +191,7 @@ fun UpdateWidgetContent(
                     }
 
                     val pagerState = rememberPagerState()
-                    val pages = listOf("Background", "SoundByte")
+                    val pages = listOf("Background", "Soundbite")
 
                     LazyColumnWithSelection(widgets = widgets) { widgetId: Int ->
                         currentWidgetId = widgetId
@@ -231,13 +231,13 @@ fun UpdateWidgetContent(
                                     ) { background: WidgetBackground ->
                                         updateWidgetBackground(currentWidgetId, background)
                                     }
-                                } else if (pages[page] == "SoundByte") {
-                                    SoundBytePicker(
-                                        updateSoundByte = { soundByte: SoundByte ->
-                                            updateWidgetSoundByte(currentWidgetId, soundByte)
+                                } else if (pages[page] == "Soundbite") {
+                                    SoundbitePicker(
+                                        updateSoundbite = { soundbite: Soundbite ->
+                                            updateWidgetSoundbite(currentWidgetId, soundbite)
                                         },
-                                        playSound = { soundByte: SoundByte ->
-                                            playSoundByte(soundByte)
+                                        playSound = { soundbite: Soundbite ->
+                                            playSoundbite(soundbite)
                                         })
                                 }
                             }
@@ -364,7 +364,7 @@ fun BackgroundPicker(
                     contentAlignment = Alignment.Center
                 ) {
                     WidgetPreview(
-                        MyWidgetDO(1, widgetBackground, soundBytes.first()),
+                        MyWidgetDO(1, widgetBackground, soundbites.first()),
                         modifier = Modifier.clickable {
                             updateBackground(widgetBackground)
                         },
@@ -377,9 +377,9 @@ fun BackgroundPicker(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SoundBytePicker(
-    updateSoundByte: (SoundByte) -> Unit,
-    playSound: (SoundByte) -> Unit,
+fun SoundbitePicker(
+    updateSoundbite: (Soundbite) -> Unit,
+    playSound: (Soundbite) -> Unit,
     backgroundColor: Color = BACKGROUND_COLOR,
     buttonBackgroundColor: Color = BUTTON_BACKGROUND_COLOR
 ) {
@@ -388,7 +388,7 @@ fun SoundBytePicker(
             .fillMaxSize()
             .background(color = backgroundColor),
         content = {
-            items(items = soundBytes) { soundByte ->
+            items(items = soundbites) { soundbite ->
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -400,7 +400,7 @@ fun SoundBytePicker(
                             .clip(RoundedCornerShape(10.dp))
                             .background(color = buttonBackgroundColor)
                             .alpha(.8f), onClick = {
-                            updateSoundByte(soundByte)
+                            updateSoundbite(soundbite)
                         }, border = BorderStroke(
                             width = 4.dp, color = MaterialTheme.colors.primaryVariant
                         )
@@ -411,17 +411,17 @@ fun SoundBytePicker(
                             Icon(painter = painterResource(
                                 id = R.drawable.ic_baseline_play_arrow_24
                             ),
-                                contentDescription = "play ${soundByte.name}",
+                                contentDescription = "play ${soundbite.name}",
                                 modifier = Modifier
                                     .clickable {
-                                        playSound(soundByte)
+                                        playSound(soundbite)
                                     }
                                     .padding(8.dp))
                             Text(
                                 modifier = Modifier
                                     .padding(8.dp)
                                     .weight(1f),
-                                text = soundByte.name.capitalize(),
+                                text = soundbite.name.capitalize(),
                                 // use this for the time being
                                 fontSize = 16.sp,
                                 textAlign = TextAlign.Start,
@@ -468,16 +468,16 @@ fun WidgetPreviewAndroidView(
     ) {
         AndroidView(factory = { context ->
             val view = LayoutInflater.from(context)
-                .inflate(R.layout.soundbyte_widget_with_buttons, null, false)
-            val soundByteNameTV = view.findViewById<TextView>(R.id.soundbyte_name_tv)
-            val soundByteBackgroundIV = view.findViewById<ImageView>(R.id.widget_background_iv)
+                .inflate(R.layout.soundbite_widget_with_buttons, null, false)
+            val soundbiteNameTV = view.findViewById<TextView>(R.id.soundbite_name_tv)
+            val soundbiteBackgroundIV = view.findViewById<ImageView>(R.id.widget_background_iv)
             val nameAndButtonLL = view.findViewById<LinearLayout>(R.id.name_and_buttons_ll)
 
             view.findViewById<ImageView>(R.id.play_ib).isClickable = false
             view.findViewById<ImageView>(R.id.settings_ib).isClickable = false
 
-            soundByteNameTV.text = widget.soundByte.name
-            soundByteBackgroundIV.setBackgroundResource(widget.background.resourceId)
+            soundbiteNameTV.text = widget.soundbite.name
+            soundbiteBackgroundIV.setBackgroundResource(widget.background.resourceId)
             if (backgroundOnly) {
                 nameAndButtonLL.visibility = View.GONE
             }
@@ -486,7 +486,7 @@ fun WidgetPreviewAndroidView(
         }, modifier = Modifier
             .width(WIDGET_WIDTH)
             .height(WIDGET_HEIGHT), update = { view ->
-            view.findViewById<TextView>(R.id.soundbyte_name_tv).text = widget.soundByte.name
+            view.findViewById<TextView>(R.id.soundbite_name_tv).text = widget.soundbite.name
             view.findViewById<ImageView>(R.id.widget_background_iv)
                 .setImageResource(widget.background.resourceId)
         })
@@ -518,7 +518,7 @@ fun WidgetPreviewCompose(
                 modifier = Modifier.wrapContentHeight(),
             ) {
                 Text(
-                    text = widget.soundByte.name,
+                    text = widget.soundbite.name,
                     modifier = Modifier
                         .padding(4.dp)
                         .fillMaxWidth()
@@ -555,9 +555,9 @@ fun WidgetPreviewCompose(
 fun PreviewUpdateWidgetContent() {
     SoundBoardTheme() {
         UpdateWidgetContent(widgets = listOf(
-            MyWidgetDO(1, background = widgetBackgrounds[1], soundByte = soundBytes[1]),
-            MyWidgetDO(2, background = widgetBackgrounds[4], soundByte = soundBytes[2]),
-            MyWidgetDO(3, background = widgetBackgrounds[8], soundByte = soundBytes[3]),
+            MyWidgetDO(1, background = widgetBackgrounds[1], soundbite = soundbites[1]),
+            MyWidgetDO(2, background = widgetBackgrounds[4], soundbite = soundbites[2]),
+            MyWidgetDO(3, background = widgetBackgrounds[8], soundbite = soundbites[3]),
         ), isLoading = false, { _, _ -> }, { _, _ -> }, {}, {}, {})
     }
 }
@@ -568,9 +568,9 @@ fun PreviewLazyColumnWithSelection() {
     SoundBoardTheme() {
         LazyColumnWithSelection(
             widgets = listOf(
-                MyWidgetDO(1, background = widgetBackgrounds[1], soundByte = soundBytes[1]),
-                MyWidgetDO(2, background = widgetBackgrounds[4], soundByte = soundBytes[2]),
-                MyWidgetDO(3, background = widgetBackgrounds[8], soundByte = soundBytes[3]),
+                MyWidgetDO(1, background = widgetBackgrounds[1], soundbite = soundbites[1]),
+                MyWidgetDO(2, background = widgetBackgrounds[4], soundbite = soundbites[2]),
+                MyWidgetDO(3, background = widgetBackgrounds[8], soundbite = soundbites[3]),
             ),
         ) {}
     }
@@ -606,11 +606,11 @@ fun PreviewBackgroundPicker() {
 
 @Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
 @Composable
-fun PreviewSoundBytePicker() {
+fun PreviewSoundbitePicker() {
     SoundBoardTheme {
-        SoundBytePicker({}, {})
+        SoundbitePicker({}, {})
     }
 }
 
 private val fakeWidget: MyWidgetDO =
-    MyWidgetDO(1, widgetBackgrounds.first(), soundBytes.first())
+    MyWidgetDO(1, widgetBackgrounds.first(), soundbites.first())

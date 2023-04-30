@@ -31,8 +31,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.findNavController
 import dev.danielkeyes.nacho.composables.MyScaffold
-import dev.danielkeyes.nacho.resources.SoundByte
-import dev.danielkeyes.nacho.resources.soundBytes
+import dev.danielkeyes.nacho.resources.Soundbite
+import dev.danielkeyes.nacho.resources.soundbites
 import dev.danielkeyes.nacho.ui.theme.SoundBoardTheme
 import dev.danielkeyes.nacho.utils.MyMediaPlayer
 
@@ -44,7 +44,7 @@ class SoundBoardFragment : Fragment() {
     ): View {
         super.onCreate(savedInstanceState)
 
-        val soundBytes = soundBytes
+        val soundbites = soundbites
         val background = FULL_SIZE_BACKGROUND
 
         return ComposeView(requireContext()).apply {
@@ -57,7 +57,7 @@ class SoundBoardFragment : Fragment() {
                     ) {
                         SoundBoard(
                             findNavController(),
-                            soundBytes = soundBytes,
+                            soundbites = soundbites,
                             background = background,
                             playMedia = {
                                 MyMediaPlayer.playSoundID(it, context)
@@ -79,7 +79,7 @@ class SoundBoardFragment : Fragment() {
 @Composable
 fun SoundBoard(
     navController: NavController,
-    soundBytes: List<SoundByte>,
+    soundbites: List<Soundbite>,
     background: Int,
     playMedia: (Int) -> Unit,
 ) {
@@ -105,9 +105,9 @@ fun SoundBoard(
                     columns = StaggeredGridCells.Fixed(columns),
                     modifier = Modifier.weight(1f)
                 ) {
-                    items(soundBytes) { soundByte ->
-                        SoundByteButton(soundByte = soundByte,
-                            playMedia = { playMedia(soundByte.resourceId) })
+                    items(soundbites) { soundbite ->
+                        SoundbiteButton(soundbite = soundbite,
+                            playMedia = { playMedia(soundbite.resourceId) })
                     }
                 }
             }
@@ -117,8 +117,8 @@ fun SoundBoard(
 
 
 @Composable
-fun SoundByteButton(
-    soundByte: SoundByte,
+fun SoundbiteButton(
+    soundbite: Soundbite,
     playMedia: (Int) -> Unit
 ) {
     Box(
@@ -132,13 +132,13 @@ fun SoundByteButton(
                 .clip(RoundedCornerShape(10.dp))
                 .alpha(.8f),
             onClick = {
-                playMedia(soundByte.resourceId)
+                playMedia(soundbite.resourceId)
             },
             border = BorderStroke(width = 4.dp, color = MaterialTheme.colors.primaryVariant)
         ) {
             Text(
                 modifier = Modifier.padding(8.dp),
-                text = soundByte.name.capitalize(),
+                text = soundbite.name.capitalize(),
                 fontSize = 24.sp,
                 textAlign = TextAlign.Center,
                 color = Color.Black
@@ -149,11 +149,11 @@ fun SoundByteButton(
 
 @Preview(showBackground = true)
 @Composable
-fun SoundBytePreview() {
+fun SoundbitePreview() {
     SoundBoardTheme {
         Column {
-            SoundByteButton(soundByte = SoundByte("Sound 1", 1), {})
-            SoundByteButton(soundByte = SoundByte("Second Sound", 1), {})
+            SoundbiteButton(soundbite = Soundbite("Sound 1", 1), {})
+            SoundbiteButton(soundbite = Soundbite("Second Sound", 1), {})
         }
     }
 }
@@ -162,7 +162,7 @@ fun SoundBytePreview() {
 @Composable
 fun DefaultPreview() {
     SoundBoardTheme {
-        SoundBoard(rememberNavController(), soundBytes, FULL_SIZE_BACKGROUND, {})
+        SoundBoard(rememberNavController(), soundbites, FULL_SIZE_BACKGROUND, {})
     }
 }
 

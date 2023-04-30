@@ -12,8 +12,7 @@ import androidx.lifecycle.viewModelScope
 import dev.danielkeyes.nacho.resources.*
 import dev.danielkeyes.nacho.utils.MyMediaPlayer
 import dev.danielkeyes.nacho.utils.SharedPreferencesHelper
-import dev.danielkeyes.nacho.utils.myLog
-import dev.danielkeyes.nacho.widget.SoundByteWidget
+import dev.danielkeyes.nacho.widget.SoundbiteWidget
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -38,7 +37,7 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
     private fun getWidgetIDs(): List<Int> {
         val appWidgetManager = AppWidgetManager.getInstance(context)
         val widgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context,
-            SoundByteWidget::class.java))
+            SoundbiteWidget::class.java))
         return widgetIds.toList()
     }
 
@@ -51,9 +50,9 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
         widgetIds.forEach { widgetId ->
             val background =
                 SharedPreferencesHelper.getBackground(widgetId, context, widgetBackgrounds.first())
-            val soundByte =
-                SharedPreferencesHelper.getSoundByte(widgetId, context, soundBytes.first())
-            widgetsList.add(MyWidgetDO(widgetId, background, soundByte))
+            val soundbite =
+                SharedPreferencesHelper.getSoundbite(widgetId, context, soundbites.first())
+            widgetsList.add(MyWidgetDO(widgetId, background, soundbite))
         }
 
         _widgets.value = widgetsList.toList()
@@ -73,7 +72,7 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
             val a = MyWidgetDO(
                 it.widgetId,
                 it.background,
-                it.soundByte
+                it.soundbite
             )
             if(a.widgetId == widgetId){
                 a.background = background
@@ -85,18 +84,18 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
         _widgets.postValue(list)
     }
 
-    fun updateWidgetSoundByte(widgetId: Int, soundByte: SoundByte) {
-        SharedPreferencesHelper.setSoundByte(widgetId, soundByte, context)
+    fun updateWidgetSoundbite(widgetId: Int, soundbite: Soundbite) {
+        SharedPreferencesHelper.setSoundbite(widgetId, soundbite, context)
 
         val list = mutableListOf<MyWidgetDO>()
         _widgets.value?.forEach {
             val a = MyWidgetDO(
                 it.widgetId,
                 it.background,
-                it.soundByte
+                it.soundbite
             )
             if(a.widgetId == widgetId){
-                a.soundByte = soundByte
+                a.soundbite = soundbite
             }
 
             list.add(a)
@@ -108,14 +107,14 @@ class WidgetViewModel(application: Application) : AndroidViewModel(application) 
     fun updateWidgets() {
         dev.danielkeyes.nacho.widget.updateWidgets(
             appWidgetIds = AppWidgetManager.getInstance(context)
-                .getAppWidgetIds(ComponentName(context, SoundByteWidget::class.java)),
+                .getAppWidgetIds(ComponentName(context, SoundbiteWidget::class.java)),
             context = context,
             appWidgetManager = AppWidgetManager.getInstance(context)
         )
     }
 
-    fun playSoundByte(soundByte: SoundByte) {
-        MyMediaPlayer.playSoundID(soundByte.resourceId, context)
+    fun playSoundbite(soundbite: Soundbite) {
+        MyMediaPlayer.playSoundID(soundbite.resourceId, context)
     }
 
     fun deleteAllWidgets(){

@@ -23,7 +23,7 @@ package dev.danielkeyes.nacho.widgetglance
 //import androidx.glance.action.ActionParameters
 //import androidx.glance.appwidget.action.ActionCallback
 //import dev.danielkeyes.nacho.utils.NachoMediaPlayer
-//import dev.danielkeyes.nacho.utils.SoundByteUtils
+//import dev.danielkeyes.nacho.utils.SoundbiteUtils
 
 
 // Glance - compose widget - underwhelming.....
@@ -35,23 +35,23 @@ package dev.danielkeyes.nacho.widgetglance
 
 
 //
-//class SoundByteWidget: GlanceAppWidget() {
+//class SoundbiteWidget: GlanceAppWidget() {
 //    @Composable
 //    override fun Content() {
-//        SoundByteWidgetContent()
+//        SoundbiteWidgetContent()
 //    }
 //
 //    companion object {
-//        const val SOUNDBYTE_WIDGET_PREFS_KEY = "SOUNDBYTE_WIDGET_PREFS_KEY"
+//        const val SOUNdbitE_WIDGET_PREFS_KEY = "SOUNdbitE_WIDGET_PREFS_KEY"
 //    }
 //}
 //
-//class SoundByteReceiver: GlanceAppWidgetReceiver() {
-//    override val glanceAppWidget: GlanceAppWidget = SoundByteWidget()
+//class SoundbiteReceiver: GlanceAppWidgetReceiver() {
+//    override val glanceAppWidget: GlanceAppWidget = SoundbiteWidget()
 //}
 //
 //@Composable
-//fun SoundByteWidgetContent() {
+//fun SoundbiteWidgetContent() {
 //    Text(
 //        text = "I wanna win",
 //        style = TextStyle(
@@ -60,7 +60,7 @@ package dev.danielkeyes.nacho.widgetglance
 //            textAlign = TextAlign.Center
 //            ),
 //        modifier = GlanceModifier
-//            .clickable(onClick = actionRunCallback<PlaySoundByteAction>())
+//            .clickable(onClick = actionRunCallback<PlaySoundbiteAction>())
 //            .background(Color(0xFF000000))
 //            .fillMaxSize()
 //            .padding(8.dp)
@@ -68,7 +68,7 @@ package dev.danielkeyes.nacho.widgetglance
 //}
 //
 //
-//class changeSoundByteAction: ActionCallback {
+//class changeSoundbiteAction: ActionCallback {
 //    override suspend fun onAction(
 //        context: Context,
 //        glanceId: GlanceId,
@@ -78,13 +78,13 @@ package dev.danielkeyes.nacho.widgetglance
 //    }
 //}
 //
-//class PlaySoundByteAction: ActionCallback {
+//class PlaySoundbiteAction: ActionCallback {
 //    override suspend fun onAction(
 //        context: Context,
 //        glanceId: GlanceId,
 //        parameters: ActionParameters
 //    ) {
-//        val soundByte = SoundByteUtils.getSoundByte("win")
-//        NachoMediaPlayer.playSoundID(soundByte.id, context)
+//        val soundbite = SoundbiteUtils.getSoundbite("win")
+//        NachoMediaPlayer.playSoundID(soundbite.id, context)
 //    }
 //}
